@@ -1,1 +1,6 @@
 node_modules
+
+/lib/generated/prisma
+
+.env
+!.env.example
