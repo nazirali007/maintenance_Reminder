@@ -4,12 +4,14 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const comicRelief = Comic_Relief({
   variable: "--font-comic-relief",
   weight: ["400", "700"],
   subsets: ["latin"],
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -36,6 +38,7 @@ export default function RootLayout({
                 <ThemeToggle />
               </div>
               {children}
+              <Toaster />
             </QueryProvider>
           </SessionProvider>
         </ThemeProvider>
