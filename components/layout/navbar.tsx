@@ -24,6 +24,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  NotificationBell,
+  type NotificationItem,
+} from "@/components/layout/notification-bell";
 
 interface NavbarUser {
   name?: string | null;
@@ -31,7 +35,13 @@ interface NavbarUser {
   image?: string | null;
 }
 
-export function Navbar({ user }: { user: NavbarUser }) {
+export function Navbar({
+  user,
+  notifications,
+}: {
+  user: NavbarUser;
+  notifications: NotificationItem[];
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const initials = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
 
@@ -57,6 +67,7 @@ export function Navbar({ user }: { user: NavbarUser }) {
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
+        <NotificationBell notifications={notifications} />
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger

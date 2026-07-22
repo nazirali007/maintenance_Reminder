@@ -27,6 +27,7 @@ model User {
   sessions            Session[]
   passwordResetTokens PasswordResetToken[]
   vehicles            Vehicle[]
+  notifications       Notification[]
 }
 
 model Account {
@@ -114,5 +115,32 @@ model MaintenanceItem {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+}
+
+enum NotificationType {
+  DUE_TODAY
+  DUE_SOON
+  OVERDUE
+  COMPLETED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+model Notification {
+  id                String             @id @default(cuid())
+  userId            String
+  type              NotificationType
+  title             String
+  message           String
+  status            NotificationStatus @default(UNREAD)
+  maintenanceItemId String?
+  createdAt         DateTime           @default(now())
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  maintenanceItem MaintenanceItem? @relation(fields: [maintenanceItemId], references: [id], onDelete: SetNull)
 }
