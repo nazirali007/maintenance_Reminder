@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/naziralisiddiqui/Projects/maintenanceReminder/app/%28auth%29/layout.tsx"],"sourcesContent":["export default function AuthLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return (\n    <div className=\"flex flex-1 items-center justify-center p-4\">\n      <div className=\"w-full max-w-sm\">{children}</div>\n    </div>\n  );\n}\n"],"names":["AuthLayout","children","className"],"mappings":";;;;;;AAAe,SAASA,WAAW,EACjCC,QAAQ,EAGT;IACC,qBACE,qbAAC;QAAIC,WAAU;kBACb,cAAA,qbAAC;YAAIA,WAAU;sBAAmBD;;;;;;;;;;;AAGxC"}}]
+}

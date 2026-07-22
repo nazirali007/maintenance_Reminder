@@ -1,0 +1,11 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/vehicles/route.js")
+R.c("server/chunks/[root-of-the-server]__048we1s._.js")
+R.c("server/chunks/1j-r_next_01079on._.js")
+R.c("server/chunks/1423_@auth_core_1cuxy9c._.js")
+R.c("server/chunks/1_lr_jose_dist_webapi_1ab87fo._.js")
+R.c("server/chunks/0oo4_zod_v3_11e8hmz._.js")
+R.c("server/chunks/[root-of-the-server]__1kmi7bq._.js")
+R.c("server/chunks/[root-of-the-server]__0q1ug84._.js")
+R.c("server/chunks/_next-internal_server_app_api_vehicles_route_actions_0-emi9l.js")
+R.m("[project]/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_supports-color@7.2.0__react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/app/api/vehicles/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_supports-color@7.2.0__react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/app/api/vehicles/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

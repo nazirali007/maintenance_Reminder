@@ -1,3 +1,3 @@
-{"timestamp":"00:00:00.572","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:14:22.664","source":"Server","level":"LOG","message":"  Reload env: .env"}
-{"timestamp":"00:15:08.444","source":"Server","level":"LOG","message":"  Reload env: .env"}
+{"timestamp":"00:00:00.537","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:01.331","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:09:39.428","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
