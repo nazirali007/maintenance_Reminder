@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/naziralisiddiqui/Projects/maintenanceReminder/components/providers/query-provider.tsx"],"sourcesContent":["\"use client\";\n\nimport { useState } from \"react\";\nimport { QueryClient, QueryClientProvider } from \"@tanstack/react-query\";\n\nexport function QueryProvider({ children }: { children: React.ReactNode }) {\n  const [queryClient] = useState(() => new QueryClient());\n\n  return (\n    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>\n  );\n}\n"],"names":["QueryProvider","children","queryClient","client"],"mappings":";;;;;AAEA;AACA;AAAA;;;AAHA;;;AAKO,SAASA,cAAc,EAAEC,QAAQ,EAAiC;;IACvE,MAAM,CAACC,YAAY,GAAG,IAAA,gXAAQ;kCAAC,IAAM,IAAI,yQAAW;;IAEpD,qBACE,oYAAC,iTAAmB;QAACC,QAAQD;kBAAcD;;;;;;AAE/C;GANgBD;KAAAA"}},
-    {"offset": {"line": 42, "column": 0}, "map": {"version":3,"sources":["file:///Users/naziralisiddiqui/Projects/maintenanceReminder/components/providers/session-provider.tsx"],"sourcesContent":["\"use client\";\n\nimport { SessionProvider as NextAuthSessionProvider } from \"next-auth/react\";\n\nexport function SessionProvider({ children }: { children: React.ReactNode }) {\n  return <NextAuthSessionProvider>{children}</NextAuthSessionProvider>;\n}\n"],"names":["SessionProvider","children"],"mappings":";;;;;AAEA;AAFA;;;AAIO,SAASA,gBAAgB,EAAEC,QAAQ,EAAiC;IACzE,qBAAO,oYAAC,6WAAuB;kBAAEA;;;;;;AACnC;KAFgBD"}}]
-}

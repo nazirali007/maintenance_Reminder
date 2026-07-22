@@ -2,5 +2,7 @@ node_modules
 
 /lib/generated/prisma
 
+.next
+
 .env
 !.env.example
