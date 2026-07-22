@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -21,15 +20,7 @@ export default async function VehiclesPage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <Link
-            href="/dashboard"
-            className="text-sm text-muted-foreground underline underline-offset-4"
-          >
-            &larr; Back to Dashboard
-          </Link>
-          <h1 className="text-xl font-semibold">Your Vehicles</h1>
-        </div>
+        <h1 className="text-xl font-semibold">Your Vehicles</h1>
         <AddVehicleDialog />
       </div>
 

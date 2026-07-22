@@ -44,19 +44,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">{greeting} 👋</h1>
-          <p className="text-sm text-muted-foreground">
-            {vehicle.brand} {vehicle.model}
-          </p>
-        </div>
-        <Link
-          href="/vehicles"
-          className="text-sm text-muted-foreground underline underline-offset-4"
-        >
-          Manage Vehicles
-        </Link>
+      <div>
+        <h1 className="text-xl font-semibold">{greeting} 👋</h1>
+        <p className="text-sm text-muted-foreground">
+          {vehicle.brand} {vehicle.model}
+        </p>
       </div>
 
       <Card>
