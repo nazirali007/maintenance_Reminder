@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getGreeting } from "@/lib/utils";
-import { computeHealthScore, sortByUrgency } from "@/lib/maintenance";
+import { cn, getGreeting } from "@/lib/utils";
+import { computeHealthScore, getHealthScoreStatus, sortByUrgency } from "@/lib/maintenance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddMaintenanceItemDialog } from "@/components/dashboard/add-maintenance-item-dialog";
 import { MaintenanceItemRow } from "@/components/dashboard/maintenance-item-row";
@@ -40,6 +40,7 @@ export default async function DashboardPage() {
   }
 
   const healthScore = computeHealthScore(vehicle.maintenanceItems, vehicle.currentMileage);
+  const healthStatus = getHealthScoreStatus(healthScore);
   const upcomingItems = sortByUrgency(vehicle.maintenanceItems, vehicle.currentMileage);
 
   return (
@@ -56,7 +57,16 @@ export default async function DashboardPage() {
           <CardTitle>Car Health</CardTitle>
         </CardHeader>
         <CardContent>
-          <span className="text-4xl font-semibold">{healthScore}%</span>
+          <span
+            className={cn(
+              "text-4xl font-semibold",
+              healthStatus === "overdue" && "text-destructive",
+              healthStatus === "due-soon" && "text-warning",
+              healthStatus === "ok" && "text-success"
+            )}
+          >
+            {healthScore}%
+          </span>
         </CardContent>
       </Card>
 

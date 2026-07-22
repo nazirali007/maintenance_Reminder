@@ -8,7 +8,7 @@ export function MaintenanceItemRow({
   item: { name: string; intervalKm: number; lastServiceMileage: number };
   currentMileage: number;
 }) {
-  const { label, isOverdue } = getMaintenanceDueInfo(item, currentMileage);
+  const { label, status } = getMaintenanceDueInfo(item, currentMileage);
 
   return (
     <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
@@ -16,7 +16,9 @@ export function MaintenanceItemRow({
       <span
         className={cn(
           "text-sm",
-          isOverdue ? "font-semibold text-destructive" : "text-muted-foreground"
+          status === "overdue" && "font-semibold text-destructive",
+          status === "due-soon" && "font-medium text-warning",
+          status === "ok" && "text-success"
         )}
       >
         {label}
