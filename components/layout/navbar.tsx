@@ -56,7 +56,11 @@ export function Navbar({
         </SheetTrigger>
         <SheetContent side="left">
           <SheetHeader>
-            <SheetTitle>Maintenance Reminder</SheetTitle>
+            <SheetTitle className="flex items-center gap-2">
+               <SheetTitle>Maintenance Reminder</SheetTitle>
+              <img src="/BrandLogo.svg" alt="" className="h-8 w-8 rounded-md" />
+              Maintenance Reminder
+            </SheetTitle>
           </SheetHeader>
           <div className="px-4">
             <SidebarNav onNavigate={() => setMobileOpen(false)} />

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"icon.svg -> %{http_code}\\\\n\" \"http://localhost:3000/icon.svg?icon.2x8ml40_kbvu3.svg\")",
+      "Bash(curl -s -o /dev/null -w \"favicon.ico -> %{http_code}\\\\n\" \"http://localhost:3000/favicon.ico?favicon.2vob68tjqpejf.ico\")",
+      "Bash(curl -s -o /dev/null -w \"/login \\(still public\\) -> %{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"/dashboard \\(still gated\\) -> %{http_code}\\\\n\" http://localhost:3000/dashboard)",
+      "Bash(node e2e-logo.mjs)",
+      "Bash(rm -f /private/tmp/claude-501/-Users-naziralisiddiqui-Projects-maintenanceReminder/f61ebdad-dbfe-488b-907f-4f34fa3a461b/scratchpad/e2e-logo.mjs)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
