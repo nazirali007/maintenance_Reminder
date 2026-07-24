@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboardIcon, CarIcon } from "lucide-react";
+import { LayoutDashboardIcon, CarIcon, SettingsIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
   { href: "/vehicles", label: "Vehicles", icon: CarIcon },
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {

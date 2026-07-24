@@ -57,8 +57,7 @@ export function Navbar({
         <SheetContent side="left">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
-               <SheetTitle>Maintenance Reminder</SheetTitle>
-              <img src="/BrandLogo.svg" alt="" className="h-8 w-8 rounded-md" />
+              <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
               Maintenance Reminder
             </SheetTitle>
           </SheetHeader>
