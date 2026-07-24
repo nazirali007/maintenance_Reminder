@@ -17,15 +17,16 @@ export function BrandIcon({
 }) {
   const [logoFailed, setLogoFailed] = useState(false);
   const brandData = findBrand(brand);
+  const logoPath = brandData ? getBrandLogoPath(brandData.id) : undefined;
 
-  if (brandData && !logoFailed) {
+  if (logoPath && !logoFailed) {
     return (
       <img
-        src={getBrandLogoPath(brandData.id)}
+        src={logoPath}
         alt={brand}
         width={size}
         height={size}
-        className={cn("shrink-0 rounded-md object-contain", className)}
+        className={cn("shrink-0 rounded-sm p-1 object-contain bg-white", className)}
         style={{ width: size, height: size }}
         onError={() => setLogoFailed(true)}
       />
