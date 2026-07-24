@@ -8,6 +8,7 @@ import { computeHealthScore, getHealthScoreStatus, sortByUrgency } from "@/lib/m
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddMaintenanceItemDialog } from "@/components/dashboard/add-maintenance-item-dialog";
 import { MaintenanceItemRow } from "@/components/dashboard/maintenance-item-row";
+import { BrandIcon } from "@/components/vehicles/brand-icon";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -45,11 +46,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-xl font-semibold">{greeting} 👋</h1>
-        <p className="text-sm text-muted-foreground">
-          {vehicle.brand} {vehicle.model}
-        </p>
+      <div className="flex items-center gap-3">
+        <BrandIcon brand={vehicle.brand} size={48} />
+        <div>
+          <h1 className="text-xl font-semibold">{greeting} 👋</h1>
+          <p className="text-sm text-muted-foreground">
+            {vehicle.brand} {vehicle.model}
+          </p>
+        </div>
       </div>
 
       <Card>

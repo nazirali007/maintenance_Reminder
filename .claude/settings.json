@@ -8,7 +8,13 @@
       "Bash(node e2e-logo.mjs)",
       "Bash(rm -f /private/tmp/claude-501/-Users-naziralisiddiqui-Projects-maintenanceReminder/f61ebdad-dbfe-488b-907f-4f34fa3a461b/scratchpad/e2e-logo.mjs)",
       "Bash(node -e ' *)",
-      "Bash(node e2e-settings.mjs)"
+      "Bash(node e2e-settings.mjs)",
+      "Read(//Users/naziralisiddiqui/Downloads/**)",
+      "Bash(node e2e-brand.mjs)",
+      "Bash(rm -f /private/tmp/claude-501/-Users-naziralisiddiqui-Projects-maintenanceReminder/f61ebdad-dbfe-488b-907f-4f34fa3a461b/scratchpad/e2e-brand.mjs)",
+      "Bash(node e2e-edit.mjs)",
+      "Bash(rm -f /private/tmp/claude-501/-Users-naziralisiddiqui-Projects-maintenanceReminder/f61ebdad-dbfe-488b-907f-4f34fa3a461b/scratchpad/e2e-edit.mjs)",
+      "Bash(node e2e-layout2.mjs)"
     ]
   }
 }
