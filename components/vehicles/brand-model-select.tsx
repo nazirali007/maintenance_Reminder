@@ -6,6 +6,8 @@ import { ChevronDownIcon, SearchIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CAR_BRANDS, findBrand } from "@/lib/car-catalog";
 import { BrandIcon } from "@/components/vehicles/brand-icon";
+import { ModelThumb } from "@/components/vehicles/model-thumb";
+import { CarPhoto } from "@/components/vehicles/car-photo";
 import { FieldLabel } from "@/components/ui/field";
 
 interface DropdownOption {
@@ -168,19 +170,36 @@ export function BrandModelSelect({
           value={model}
           onChange={onModelChange}
           disabled={!selectedBrand}
-          options={models.map((m) => ({ name: m }))}
+          options={models.map((m) => ({
+            name: m,
+            icon: selectedBrand ? (
+              <ModelThumb
+                brandId={selectedBrand.id}
+                brandName={selectedBrand.name}
+                model={m}
+                size={28}
+              />
+            ) : undefined,
+          }))}
         />
       </div>
 
       {selectedBrand && model && (
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 sm:col-span-2">
-          <BrandIcon brand={selectedBrand.name} size={40} />
-          <div>
-            <p className="text-sm font-medium">
-              {selectedBrand.name} {model}
-            </p>
-            <p className="text-xs text-muted-foreground">Selected vehicle</p>
+        <div className="space-y-2 sm:col-span-2">
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+            <BrandIcon brand={selectedBrand.name} size={40} />
+            <div>
+              <p className="text-sm font-medium">
+                {selectedBrand.name} {model}
+              </p>
+              <p className="text-xs text-muted-foreground">Selected vehicle</p>
+            </div>
           </div>
+          <CarPhoto
+            brand={selectedBrand.name}
+            model={model}
+            className="rounded-lg border border-border"
+          />
         </div>
       )}
     </>
