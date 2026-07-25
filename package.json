@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate:cars": "node scripts/generate-car-catalog.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

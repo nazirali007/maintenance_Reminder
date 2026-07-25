@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { VehicleFormFields } from "@/components/vehicles/vehicle-form-fields";
+import { VehiclePhotoPreview } from "@/components/vehicles/vehicle-photo-preview";
 
 type FieldErrors = Partial<Record<keyof VehicleInput, string[]>>;
 
@@ -78,6 +79,8 @@ export function AddVehicleDialog() {
     >
       <DialogTrigger render={<Button>Add Vehicle</Button>} />
       <DialogContent className="sm:max-w-2xl">
+        <VehiclePhotoPreview control={control} />
+
         <DialogHeader>
           <DialogTitle>Add Vehicle</DialogTitle>
         </DialogHeader>

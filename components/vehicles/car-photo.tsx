@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { findBrand, getCarPhotoPath } from "@/lib/car-catalog";
+import { getModelImagePath } from "@/lib/car-catalog";
 import { cn } from "@/lib/utils";
 
 export function CarPhoto({
@@ -15,15 +15,15 @@ export function CarPhoto({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  const brandData = findBrand(brand);
+  const imagePath = getModelImagePath(brand, model);
 
-  if (!brandData || failed) {
+  if (!imagePath || failed) {
     return null;
   }
 
   return (
     <img
-      src={getCarPhotoPath(brandData.id, model)}
+      src={imagePath}
       alt={`${brand} ${model}`}
       className={cn("aspect-video w-full object-cover", className)}
       onError={() => setFailed(true)}

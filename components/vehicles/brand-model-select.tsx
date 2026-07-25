@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { CAR_BRANDS, findBrand } from "@/lib/car-catalog";
 import { BrandIcon } from "@/components/vehicles/brand-icon";
 import { ModelThumb } from "@/components/vehicles/model-thumb";
-import { CarPhoto } from "@/components/vehicles/car-photo";
 import { FieldLabel } from "@/components/ui/field";
 
 interface DropdownOption {
@@ -59,7 +58,7 @@ function Dropdown({
           disabled={disabled}
           onClick={() => setOpen((o) => !o)}
           className={cn(
-            "flex w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-2 text-left text-sm transition-colors",
+            "flex h-8 w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 text-left text-sm transition-colors",
             disabled
               ? "cursor-not-allowed text-muted-foreground/50"
               : "hover:border-primary/50",
@@ -157,7 +156,7 @@ export function BrandModelSelect({
           }}
           options={CAR_BRANDS.map((b) => ({
             name: b.name,
-            icon: <BrandIcon brand={b.name} size={22} />,
+            icon: <BrandIcon brand={b.name} size={20} />,
           }))}
         />
       </div>
@@ -171,37 +170,18 @@ export function BrandModelSelect({
           onChange={onModelChange}
           disabled={!selectedBrand}
           options={models.map((m) => ({
-            name: m,
+            name: m.name,
             icon: selectedBrand ? (
               <ModelThumb
-                brandId={selectedBrand.id}
                 brandName={selectedBrand.name}
-                model={m}
-                size={28}
+                model={m.name}
+                image={m.image}
+                size={20}
               />
             ) : undefined,
           }))}
         />
       </div>
-
-      {selectedBrand && model && (
-        <div className="space-y-2 sm:col-span-2">
-          <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-            <BrandIcon brand={selectedBrand.name} size={40} />
-            <div>
-              <p className="text-sm font-medium">
-                {selectedBrand.name} {model}
-              </p>
-              <p className="text-xs text-muted-foreground">Selected vehicle</p>
-            </div>
-          </div>
-          <CarPhoto
-            brand={selectedBrand.name}
-            model={model}
-            className="rounded-lg border border-border"
-          />
-        </div>
-      )}
     </>
   );
 }

@@ -3,28 +3,28 @@
 import { useState } from "react";
 import { CarIcon } from "lucide-react";
 
-import { getBrandColor, getCarPhotoPath } from "@/lib/car-catalog";
+import { getBrandColor } from "@/lib/car-catalog";
 import { cn } from "@/lib/utils";
 
 export function ModelThumb({
-  brandId,
   brandName,
   model,
+  image,
   size = 28,
   className,
 }: {
-  brandId: string;
   brandName: string;
   model: string;
+  image: string | null;
   size?: number;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
 
-  if (!failed) {
+  if (image && !failed) {
     return (
       <img
-        src={getCarPhotoPath(brandId, model)}
+        src={image}
         alt={`${brandName} ${model}`}
         width={size}
         height={size}

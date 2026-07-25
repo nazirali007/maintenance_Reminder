@@ -40,7 +40,7 @@ export function VehicleFormFields({
   errors: RHFFieldErrors<VehicleInput>;
 }) {
   return (
-    <FieldGroup className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+    <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Controller
         name="brand"
         control={control}
@@ -59,10 +59,7 @@ export function VehicleFormFields({
           />
         )}
       />
-      <div className="sm:col-span-2">
-        <FieldError errors={[errors.brand]} />
-        <FieldError errors={[errors.model]} />
-      </div>
+      <FieldError errors={[errors.brand, errors.model]} className="sm:col-span-2" />
 
       <Field data-invalid={!!errors.variant}>
         <FieldLabel htmlFor="variant">Variant</FieldLabel>
