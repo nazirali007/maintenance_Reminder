@@ -2,6 +2,53 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { vehicleSchema } from "@/lib/validations/vehicle";
 
+export async function GET(
+  request: Request,
+  ctx: RouteContext<"/api/vehicles/[vehicleId]">
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { vehicleId } = await ctx.params;
+
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id: vehicleId },
+    include: { maintenanceItems: true },
+  });
+
+  if (!vehicle || vehicle.userId !== session.user.id) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return Response.json({ vehicle });
+}
+
+export async function DELETE(
+  request: Request,
+  ctx: RouteContext<"/api/vehicles/[vehicleId]">
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { vehicleId } = await ctx.params;
+
+  const existing = await prisma.vehicle.findUnique({
+    where: { id: vehicleId },
+  });
+
+  if (!existing || existing.userId !== session.user.id) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  await prisma.vehicle.delete({ where: { id: vehicleId } });
+
+  return Response.json({ success: true });
+}
+
 export async function PATCH(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]">
