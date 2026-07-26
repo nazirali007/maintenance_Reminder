@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations/maintenance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,13 @@ export function EditMaintenanceItemDialog({
   item,
 }: {
   vehicleId: string;
-  item: { id: string; name: string; intervalKm: number; lastServiceMileage: number };
+  item: {
+    id: string;
+    name: string;
+    intervalKm: number;
+    lastServiceMileage: number;
+    notes: string | null;
+  };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -39,6 +46,7 @@ export function EditMaintenanceItemDialog({
     name: item.name,
     intervalKm: item.intervalKm,
     lastServiceMileage: item.lastServiceMileage,
+    notes: item.notes ?? "",
   };
 
   const {
@@ -138,6 +146,14 @@ export function EditMaintenanceItemDialog({
                 {...register("lastServiceMileage")}
               />
               <FieldError errors={[errors.lastServiceMileage]} />
+            </Field>
+
+            <Field data-invalid={!!errors.notes}>
+              <FieldLabel htmlFor="edit-notes">
+                Notes <span className="text-muted-foreground">(optional)</span>
+              </FieldLabel>
+              <Textarea id="edit-notes" {...register("notes")} />
+              <FieldError errors={[errors.notes]} />
             </Field>
           </FieldGroup>
 

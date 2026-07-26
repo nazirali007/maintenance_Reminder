@@ -14,30 +14,36 @@ export function MaintenanceItemRow({
     name: string;
     intervalKm: number;
     lastServiceMileage: number;
+    notes: string | null;
   };
   currentMileage: number;
 }) {
   const { label, status } = getMaintenanceDueInfo(item, currentMileage);
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-      <span className="text-sm font-medium">{item.name}</span>
-      <div className="flex items-center gap-3">
-        <span
-          className={cn(
-            "text-sm",
-            status === "overdue" && "font-semibold text-destructive",
-            status === "due-soon" && "font-medium text-warning",
-            status === "ok" && "text-success"
-          )}
-        >
-          {label}
-        </span>
-        <div className="flex items-center gap-1.5">
-          <EditMaintenanceItemDialog vehicleId={vehicleId} item={item} />
-          <DeleteMaintenanceItemDialog vehicleId={vehicleId} item={item} />
+    <div className="flex flex-col gap-1 rounded-lg border border-border px-4 py-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{item.name}</span>
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              "text-sm",
+              status === "overdue" && "font-semibold text-destructive",
+              status === "due-soon" && "font-medium text-warning",
+              status === "ok" && "text-success"
+            )}
+          >
+            {label}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <EditMaintenanceItemDialog vehicleId={vehicleId} item={item} />
+            <DeleteMaintenanceItemDialog vehicleId={vehicleId} item={item} />
+          </div>
         </div>
       </div>
+      {item.notes && (
+        <p className="text-xs text-muted-foreground">{item.notes}</p>
+      )}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { maintenanceItemSchema } from "@/lib/validations/maintenance";
+import { maintenanceChecklistSchema } from "@/lib/validations/maintenance";
+
+const GENERAL_NOTE_INTERVAL_KM = 200000;
 
 export async function POST(
   request: Request,
@@ -22,7 +24,7 @@ export async function POST(
   }
 
   const body = await request.json();
-  const parsed = maintenanceItemSchema.safeParse(body);
+  const parsed = maintenanceChecklistSchema.safeParse(body);
 
   if (!parsed.success) {
     return Response.json(
@@ -31,12 +33,31 @@ export async function POST(
     );
   }
 
-  const maintenanceItem = await prisma.maintenanceItem.create({
-    data: {
-      ...parsed.data,
-      vehicleId,
-    },
-  });
+  const { lastServiceMileage, notes, items } = parsed.data;
+  const trimmedNotes = notes?.trim() || null;
 
-  return Response.json({ maintenanceItem }, { status: 201 });
+  const rowsToCreate =
+    items.length > 0
+      ? items.map((item) => ({
+          name: item.name,
+          intervalKm: item.intervalKm,
+          lastServiceMileage,
+          notes: trimmedNotes,
+          vehicleId,
+        }))
+      : [
+          {
+            name: "General Note",
+            intervalKm: GENERAL_NOTE_INTERVAL_KM,
+            lastServiceMileage,
+            notes: trimmedNotes,
+            vehicleId,
+          },
+        ];
+
+  const maintenanceItems = await prisma.$transaction(
+    rowsToCreate.map((data) => prisma.maintenanceItem.create({ data }))
+  );
+
+  return Response.json({ maintenanceItems }, { status: 201 });
 }

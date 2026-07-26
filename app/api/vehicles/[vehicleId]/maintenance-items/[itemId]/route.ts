@@ -53,9 +53,14 @@ export async function PATCH(
     );
   }
 
+  const { notes, ...rest } = parsed.data;
+
   const maintenanceItem = await prisma.maintenanceItem.update({
     where: { id: itemId },
-    data: parsed.data,
+    data: {
+      ...rest,
+      notes: notes?.trim() || null,
+    },
   });
 
   return Response.json({ maintenanceItem });
