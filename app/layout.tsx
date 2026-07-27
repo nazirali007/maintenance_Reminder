@@ -37,7 +37,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${comicRelief.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overflow-x-hidden">
         <ThemeProvider>
           <SessionProvider>
             <QueryProvider>

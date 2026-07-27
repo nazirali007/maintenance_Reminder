@@ -22,12 +22,14 @@ export function MaintenanceItemRow({
 
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-border px-4 py-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{item.name}</span>
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          {item.name}
+        </span>
+        <div className="flex shrink-0 items-center gap-3">
           <span
             className={cn(
-              "text-sm",
+              "text-sm whitespace-nowrap",
               status === "overdue" && "font-semibold text-destructive",
               status === "due-soon" && "font-medium text-warning",
               status === "ok" && "text-success"

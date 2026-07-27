@@ -16,11 +16,11 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
     <Card>
       <CarPhoto brand={vehicle.brand} model={vehicle.model} />
       <CardHeader className="flex items-center gap-3">
-        <BrandIcon brand={vehicle.brand} size={40} />
-        <CardTitle className="flex-1">
+        <BrandIcon brand={vehicle.brand} size={40} className="shrink-0" />
+        <CardTitle className="min-w-0 flex-1 truncate">
           {vehicle.brand} {vehicle.model}
         </CardTitle>
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <EditVehicleDialog vehicle={vehicle} />
           <DeleteVehicleDialog vehicle={vehicle} />
         </div>

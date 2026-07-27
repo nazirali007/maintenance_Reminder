@@ -19,7 +19,7 @@ export default async function DashboardGroupLayout({
   return (
     <div className="flex flex-1">
       <Sidebar />
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Navbar
           user={{
             name: session?.user?.name,
@@ -28,7 +28,7 @@ export default async function DashboardGroupLayout({
           }}
           notifications={notifications}
         />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
       </div>
     </div>
   );

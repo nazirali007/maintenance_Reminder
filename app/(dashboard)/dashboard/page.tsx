@@ -54,13 +54,13 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-1 flex-col gap-6 p-6">
       <h1 className="animate-in fade-in slide-in-from-top-2 text-xl font-semibold duration-500">
         {greeting}
         {firstName ? `, ${firstName}` : ""} 👋
       </h1>
 
-      <div className="animate-in fade-in slide-in-from-top-2 duration-500 [animation-delay:100ms] [animation-fill-mode:both]">
+      <div className="min-w-0 animate-in fade-in slide-in-from-top-2 duration-500 [animation-delay:100ms] [animation-fill-mode:both]">
         <BrandMarquee />
       </div>
 
@@ -88,13 +88,13 @@ export default async function DashboardPage() {
               <>
                 <CarPhoto brand={vehicle.brand} model={vehicle.model} />
                 <CardHeader className="flex items-center gap-3">
-                  <BrandIcon brand={vehicle.brand} size={40} />
-                  <CardTitle className="flex-1">
+                  <BrandIcon brand={vehicle.brand} size={40} className="shrink-0" />
+                  <CardTitle className="min-w-0 flex-1 truncate">
                     {vehicle.brand} {vehicle.model}
                   </CardTitle>
                   <span
                     className={cn(
-                      "text-2xl font-semibold transition-transform duration-300 hover:scale-110",
+                      "shrink-0 text-2xl font-semibold transition-transform duration-300 hover:scale-110",
                       healthStatus === "overdue" && "text-destructive",
                       healthStatus === "due-soon" && "text-warning",
                       healthStatus === "ok" && "text-success"

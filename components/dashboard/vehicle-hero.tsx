@@ -19,7 +19,7 @@ export function VehicleHero({
 }) {
   return (
     <div
-      className="relative aspect-video w-full overflow-hidden sm:aspect-[21/9]"
+      className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-[21/9]"
       style={{ backgroundColor: getBrandColor(vehicle.brand) }}
     >
       <CarPhoto
@@ -29,33 +29,37 @@ export function VehicleHero({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-      <div className="absolute top-3 right-3 flex flex-col gap-2 rounded-xl bg-black/50 p-3 text-xs font-medium text-white backdrop-blur-sm">
-        <span className="flex items-center gap-1.5">
-          <FuelIcon size={14} /> {FUEL_LABELS[vehicle.fuelType]}
+      <div className="absolute inset-x-3 top-3 flex flex-wrap justify-end gap-1.5">
+        <span className="flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium whitespace-nowrap text-white backdrop-blur-sm">
+          <FuelIcon size={12} /> {FUEL_LABELS[vehicle.fuelType]}
         </span>
-        <span className="flex items-center gap-1.5">
-          <GaugeIcon size={14} /> {vehicle.currentMileage.toLocaleString("en-US")} km
+        <span className="flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium whitespace-nowrap text-white backdrop-blur-sm">
+          <GaugeIcon size={12} /> {vehicle.currentMileage.toLocaleString("en-US")} km
         </span>
-        <span className="flex items-center gap-1.5">
-          <Settings2Icon size={14} /> {TRANSMISSION_LABELS[vehicle.transmission]}
+        <span className="flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium whitespace-nowrap text-white backdrop-blur-sm">
+          <Settings2Icon size={12} /> {TRANSMISSION_LABELS[vehicle.transmission]}
         </span>
       </div>
 
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
-        <div className="flex items-center gap-2.5">
-          <BrandIcon brand={vehicle.brand} size={36} className="ring-2 ring-white/60" />
-          <div>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <BrandIcon
+            brand={vehicle.brand}
+            size={36}
+            className="shrink-0 ring-2 ring-white/60"
+          />
+          <div className="min-w-0">
             <p className="text-[10px] font-medium tracking-wide text-white/70 uppercase">
               Your Vehicle
             </p>
-            <p className="text-lg leading-tight font-semibold text-white">
+            <p className="truncate text-lg leading-tight font-semibold text-white">
               {vehicle.brand} {vehicle.model}
             </p>
           </div>
         </div>
         <span
           className={cn(
-            "text-2xl font-bold text-white drop-shadow",
+            "shrink-0 text-2xl font-bold text-white drop-shadow",
             healthStatus === "overdue" && "text-destructive",
             healthStatus === "due-soon" && "text-warning",
             healthStatus === "ok" && "text-success"

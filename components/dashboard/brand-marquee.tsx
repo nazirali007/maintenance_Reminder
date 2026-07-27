@@ -6,7 +6,7 @@ export function BrandMarquee() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl border border-border bg-card py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+      className="relative w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
       style={{ perspective: "800px" }}
     >
       <div className="animate-marquee flex w-max items-center gap-8 px-4">
