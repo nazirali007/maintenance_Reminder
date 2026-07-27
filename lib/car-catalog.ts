@@ -44,14 +44,14 @@ const BRAND_META: BrandMeta[] = [
   { id: "land-rover", name: "Land Rover", color: "#005A2B", logo: "land-rover-seeklogo.png" },
   { id: "lexus", name: "Lexus", color: "#1A1A1A", logo: "lexus-seeklogo.png" },
   { id: "mercedes-benz", name: "Mercedes-Benz", color: "#1C1C1C", logo: "mercedes-benz-seeklogo.png" },
-  { id: "maserati", name: "Maserati", color: "#041E42", logo: "meserati.jpeg" },
+  { id: "maserati", name: "Maserati", color: "#041E42", logo: "maserati-seeklogo.png" },
   { id: "mini", name: "Mini Cooper", color: "#76BB43", logo: "mini-cooper-seeklogo.png" },
   { id: "porsche", name: "Porsche", color: "#000000", logo: "porsche-seeklogo.png" },
   { id: "rolls-royce", name: "Rolls-Royce", color: "#0B0B0B", logo: "rolls-royce-seeklogo.png" },
   { id: "volvo", name: "Volvo", color: "#003057", logo: "volvo-seeklogo.png" },
-  { id: "aston-martin", name: "Aston Martin", color: "#00352F", logo: "" },
+  { id: "aston-martin", name: "Aston Martin", color: "#00352F", logo: "aston-martin-seeklogo.png" },
   { id: "lamborghini", name: "Lamborghini", color: "#000000", logo: "lamborghini.jpeg" },
-  { id: "jaguar", name: "Jaguar", color: "#00594A", logo: "" },
+  { id: "jaguar", name: "Jaguar", color: "#00594A", logo: "jaguar-seeklogo.png" },
 ];
 
 function normalize(value: string): string {

@@ -3,15 +3,8 @@ import { BrandIcon } from "@/components/vehicles/brand-icon";
 import { CarPhoto } from "@/components/vehicles/car-photo";
 import { EditVehicleDialog } from "@/components/vehicles/edit-vehicle-dialog";
 import { DeleteVehicleDialog } from "@/components/vehicles/delete-vehicle-dialog";
+import { FUEL_LABELS } from "@/lib/vehicle-labels";
 import type { Vehicle } from "@/lib/generated/prisma/client";
-
-const FUEL_LABELS: Record<Vehicle["fuelType"], string> = {
-  PETROL: "Petrol",
-  DIESEL: "Diesel",
-  ELECTRIC: "Electric",
-  HYBRID: "Hybrid",
-  CNG: "CNG",
-};
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const addedDate = new Intl.DateTimeFormat("en-US", {
