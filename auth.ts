@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { loginSchema } from "@/lib/validations/auth";
+import { loginSchema, otpVerifySchema } from "@/lib/validations/auth";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -33,6 +33,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.password
         );
         if (!passwordsMatch) return null;
+
+        return user;
+      },
+    }),
+    Credentials({
+      id: "otp",
+      name: "Email code",
+      credentials: {
+        email: {},
+        otp: {},
+      },
+      authorize: async (credentials) => {
+        const parsed = otpVerifySchema.safeParse(credentials);
+        if (!parsed.success) return null;
+
+        const { email, otp } = parsed.data;
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return null;
+
+        const tokens = await prisma.verificationToken.findMany({
+          where: { identifier: email, expires: { gt: new Date() } },
+        });
+
+        let matchedToken: (typeof tokens)[number] | null = null;
+        for (const candidate of tokens) {
+          if (await bcrypt.compare(otp, candidate.token)) {
+            matchedToken = candidate;
+            break;
+          }
+        }
+
+        if (!matchedToken) return null;
+
+        await prisma.verificationToken.deleteMany({
+          where: { identifier: email },
+        });
 
         return user;
       },

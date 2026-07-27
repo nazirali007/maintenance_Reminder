@@ -36,6 +36,9 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|fevicon-16.svg|apple-icon.png|sitemap.xml|robots.txt).*)",
+    // Skip API routes, Next.js internals, and any request for a static file
+    // (anything with a file extension, e.g. images under /public) — those
+    // should never be gated behind auth.
+    "/((?!api|_next/static|_next/image|.*\\..*).*)",
   ],
 };
