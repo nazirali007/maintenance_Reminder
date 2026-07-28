@@ -7,6 +7,7 @@ export const maintenanceItemSchema = z.object({
     .number()
     .int()
     .min(0, "Mileage must be 0 or greater"),
+  lastServiceDate: z.string().min(1, "Date is required"),
   notes: z.string().optional().or(z.literal("")),
 });
 
@@ -18,6 +19,7 @@ export const maintenanceChecklistSchema = z
       .number()
       .int()
       .min(0, "Mileage must be 0 or greater"),
+    lastServiceDate: z.string().min(1, "Date is required"),
     notes: z.string().optional().or(z.literal("")),
     items: z.array(
       z.object({

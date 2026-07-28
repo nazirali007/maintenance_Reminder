@@ -20,6 +20,7 @@ export function UpcomingMaintenanceList({
     name: string;
     intervalKm: number;
     lastServiceMileage: number;
+    lastServiceDate: Date | null;
     notes: string | null;
   }[];
   currentMileage: number;

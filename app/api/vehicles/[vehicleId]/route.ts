@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { vehicleSchema } from "@/lib/validations/vehicle";
+import { shouldLogOdometerReading } from "@/lib/odometer-projection";
 
 export async function GET(
   request: Request,
@@ -88,6 +89,12 @@ export async function PATCH(
       purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
     },
   });
+
+  if (shouldLogOdometerReading(existing.currentMileage, vehicle.currentMileage)) {
+    await prisma.odometerLog.create({
+      data: { vehicleId: vehicle.id, reading: vehicle.currentMileage },
+    });
+  }
 
   return Response.json({ vehicle });
 }

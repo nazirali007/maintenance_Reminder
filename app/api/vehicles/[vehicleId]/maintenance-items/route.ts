@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { maintenanceChecklistSchema } from "@/lib/validations/maintenance";
+import { shouldLogOdometerReading } from "@/lib/odometer-projection";
 
 const GENERAL_NOTE_INTERVAL_KM = 200000;
 
@@ -33,8 +34,9 @@ export async function POST(
     );
   }
 
-  const { lastServiceMileage, notes, items } = parsed.data;
+  const { lastServiceMileage, lastServiceDate, notes, items } = parsed.data;
   const trimmedNotes = notes?.trim() || null;
+  const serviceDate = new Date(lastServiceDate);
 
   const rowsToCreate =
     items.length > 0
@@ -42,6 +44,7 @@ export async function POST(
           name: item.name,
           intervalKm: item.intervalKm,
           lastServiceMileage,
+          lastServiceDate: serviceDate,
           notes: trimmedNotes,
           vehicleId,
         }))
@@ -50,6 +53,7 @@ export async function POST(
             name: "General Note",
             intervalKm: GENERAL_NOTE_INTERVAL_KM,
             lastServiceMileage,
+            lastServiceDate: serviceDate,
             notes: trimmedNotes,
             vehicleId,
           },
@@ -58,6 +62,16 @@ export async function POST(
   const maintenanceItems = await prisma.$transaction(
     rowsToCreate.map((data) => prisma.maintenanceItem.create({ data }))
   );
+
+  if (shouldLogOdometerReading(vehicle.currentMileage, lastServiceMileage)) {
+    await prisma.vehicle.update({
+      where: { id: vehicleId },
+      data: { currentMileage: lastServiceMileage },
+    });
+    await prisma.odometerLog.create({
+      data: { vehicleId, reading: lastServiceMileage },
+    });
+  }
 
   return Response.json({ maintenanceItems }, { status: 201 });
 }

@@ -53,12 +53,13 @@ export async function PATCH(
     );
   }
 
-  const { notes, ...rest } = parsed.data;
+  const { notes, lastServiceDate, ...rest } = parsed.data;
 
   const maintenanceItem = await prisma.maintenanceItem.update({
     where: { id: itemId },
     data: {
       ...rest,
+      lastServiceDate: new Date(lastServiceDate),
       notes: notes?.trim() || null,
     },
   });

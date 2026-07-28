@@ -43,5 +43,13 @@ export async function POST(request: Request) {
     },
   });
 
+  await prisma.odometerLog.create({
+    data: {
+      vehicleId: vehicle.id,
+      reading: vehicle.currentMileage,
+      recordedAt: vehicle.createdAt,
+    },
+  });
+
   return Response.json({ vehicle }, { status: 201 });
 }

@@ -35,6 +35,7 @@ export function EditMaintenanceItemDialog({
     name: string;
     intervalKm: number;
     lastServiceMileage: number;
+    lastServiceDate: Date | null;
     notes: string | null;
   };
 }) {
@@ -46,6 +47,9 @@ export function EditMaintenanceItemDialog({
     name: item.name,
     intervalKm: item.intervalKm,
     lastServiceMileage: item.lastServiceMileage,
+    lastServiceDate: (item.lastServiceDate ?? new Date())
+      .toISOString()
+      .slice(0, 10),
     notes: item.notes ?? "",
   };
 
@@ -146,6 +150,16 @@ export function EditMaintenanceItemDialog({
                 {...register("lastServiceMileage")}
               />
               <FieldError errors={[errors.lastServiceMileage]} />
+            </Field>
+
+            <Field data-invalid={!!errors.lastServiceDate}>
+              <FieldLabel htmlFor="edit-lastServiceDate">Service Date</FieldLabel>
+              <Input
+                id="edit-lastServiceDate"
+                type="date"
+                {...register("lastServiceDate")}
+              />
+              <FieldError errors={[errors.lastServiceDate]} />
             </Field>
 
             <Field data-invalid={!!errors.notes}>

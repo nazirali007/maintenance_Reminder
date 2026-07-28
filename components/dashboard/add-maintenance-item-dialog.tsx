@@ -28,6 +28,9 @@ export function AddMaintenanceItemDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [odometer, setOdometer] = useState(String(currentMileage));
+  const [serviceDate, setServiceDate] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -35,6 +38,7 @@ export function AddMaintenanceItemDialog({
 
   function resetForm() {
     setOdometer(String(currentMileage));
+    setServiceDate(new Date().toISOString().slice(0, 10));
     setCheckedKeys(new Set());
     setNotes("");
     setFormError(null);
@@ -71,6 +75,7 @@ export function AddMaintenanceItemDialog({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         lastServiceMileage: odometer,
+        lastServiceDate: serviceDate,
         notes: notes.trim(),
         items,
       }),
@@ -104,15 +109,27 @@ export function AddMaintenanceItemDialog({
         {formError && <p className="text-sm text-destructive">{formError}</p>}
 
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-          <Field>
-            <FieldLabel htmlFor="odometer">Odometer Reading (km)</FieldLabel>
-            <Input
-              id="odometer"
-              type="number"
-              value={odometer}
-              onChange={(e) => setOdometer(e.target.value)}
-            />
-          </Field>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="odometer">Odometer Reading (km)</FieldLabel>
+              <Input
+                id="odometer"
+                type="number"
+                value={odometer}
+                onChange={(e) => setOdometer(e.target.value)}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="service-date">Service Date</FieldLabel>
+              <Input
+                id="service-date"
+                type="date"
+                value={serviceDate}
+                onChange={(e) => setServiceDate(e.target.value)}
+              />
+            </Field>
+          </div>
 
           <div className="flex flex-col gap-4">
             <p className="text-sm font-medium">

@@ -35,3 +35,56 @@ export async function sendOtpEmail(to: string, code: string) {
     throw new Error(`Resend failed to send OTP email: ${error.message}`);
   }
 }
+
+export async function sendMaintenanceDueEmail(
+  to: string,
+  params: {
+    vehicleLabel: string;
+    itemName: string;
+    reasonKm: boolean;
+    reasonDate: boolean;
+  }
+) {
+  const { vehicleLabel, itemName, reasonKm, reasonDate } = params;
+  const reasons = [
+    reasonKm && "your estimated mileage has crossed its service interval",
+    reasonDate && "it's been over a year since it was last serviced",
+  ].filter(Boolean);
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
+    to,
+    subject: `${itemName} may be due — ${vehicleLabel}`,
+    html: `
+      <p><strong>${vehicleLabel}</strong> — <strong>${itemName}</strong> may be due for service.</p>
+      <p>This is an estimate based on ${reasons.join(" and ")}, projected from your last recorded odometer reading — not a confirmed reading.</p>
+      <p>Please open the app and update your current odometer to confirm.</p>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Resend failed to send maintenance due email: ${error.message}`);
+  }
+}
+
+export async function sendOdometerUpdateNudgeEmail(
+  to: string,
+  params: { vehicleLabel: string; daysSinceLastUpdate: number }
+) {
+  const { vehicleLabel, daysSinceLastUpdate } = params;
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
+    to,
+    subject: `Update your odometer for ${vehicleLabel}`,
+    html: `
+      <p>It's been ${daysSinceLastUpdate} days since you last updated the odometer for <strong>${vehicleLabel}</strong>.</p>
+      <p>Keeping it current helps us give you accurate, timely service reminders.</p>
+      <p>Open the app and update your current odometer reading when you get a chance.</p>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Resend failed to send odometer nudge email: ${error.message}`);
+  }
+}

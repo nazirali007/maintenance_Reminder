@@ -104,17 +104,32 @@ model Vehicle {
 
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   maintenanceItems  MaintenanceItem[]
+  odometerLogs      OdometerLog[]
+  notifications     Notification[]
+}
+
+model OdometerLog {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  reading    Int
+  recordedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, recordedAt])
 }
 
 model MaintenanceItem {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   vehicleId          String
   name               String
   intervalKm         Int
   lastServiceMileage Int
+  lastServiceDate    DateTime?
   notes              String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   vehicle       Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   notifications Notification[]
@@ -125,6 +140,8 @@ enum NotificationType {
   DUE_SOON
   OVERDUE
   COMPLETED
+  ESTIMATED_OVERDUE
+  ODOMETER_UPDATE_NUDGE
 }
 
 enum NotificationStatus {
@@ -135,6 +152,7 @@ enum NotificationStatus {
 model Notification {
   id                String             @id @default(cuid())
   userId            String
+  vehicleId         String?
   type              NotificationType
   title             String
   message           String
@@ -143,5 +161,6 @@ model Notification {
   createdAt         DateTime           @default(now())
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle         Vehicle?         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   maintenanceItem MaintenanceItem? @relation(fields: [maintenanceItemId], references: [id], onDelete: SetNull)
 }
