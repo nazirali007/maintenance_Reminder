@@ -47,7 +47,7 @@ export function Navbar({
   const initials = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
 
   return (
-    <header className="flex items-center justify-between border-b border-border px-4 py-3">
+    <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger
           render={<Button variant="ghost" size="icon" className="md:hidden" />}

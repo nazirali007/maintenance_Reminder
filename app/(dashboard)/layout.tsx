@@ -18,9 +18,9 @@ export default async function DashboardGroupLayout({
   }
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 md:h-dvh">
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col md:h-dvh md:overflow-y-auto">
         <Navbar
           user={{
             name: session?.user?.name,
