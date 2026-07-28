@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { CarIcon } from "lucide-react";
 
 import { findBrand, getBrandColor, getBrandLogoPath } from "@/lib/car-catalog";
@@ -21,7 +22,7 @@ export function BrandIcon({
 
   if (logoPath && !logoFailed) {
     return (
-      <img
+      <Image
         src={logoPath}
         alt={brand}
         width={size}

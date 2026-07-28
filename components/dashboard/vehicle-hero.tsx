@@ -25,7 +25,8 @@ export function VehicleHero({
       <CarPhoto
         brand={vehicle.brand}
         model={vehicle.model}
-        className="absolute inset-0 h-full w-full object-cover"
+        fill
+        className="object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 

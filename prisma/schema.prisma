@@ -47,6 +47,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -56,6 +57,8 @@ model Session {
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -73,6 +76,8 @@ model PasswordResetToken {
   expires DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Simple fixed-window rate limiter, keyed by e.g. "otp-request:user@example.com"
@@ -115,6 +120,8 @@ model Vehicle {
   maintenanceItems  MaintenanceItem[]
   odometerLogs      OdometerLog[]
   notifications     Notification[]
+
+  @@index([userId])
 }
 
 model OdometerLog {
@@ -142,6 +149,8 @@ model MaintenanceItem {
 
   vehicle       Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   notifications Notification[]
+
+  @@index([vehicleId])
 }
 
 enum NotificationType {
@@ -172,4 +181,12 @@ model Notification {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicle         Vehicle?         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   maintenanceItem MaintenanceItem? @relation(fields: [maintenanceItemId], references: [id], onDelete: SetNull)
+
+  // Matches `getUnreadNotifications`'s where clause exactly.
+  @@index([userId, status])
+  // Matches the OVERDUE/ESTIMATED_OVERDUE dedup lookups in
+  // syncOverdueNotifications and runDailyMaintenanceCheck.
+  @@index([maintenanceItemId, type])
+  // Matches the ODOMETER_UPDATE_NUDGE dedup lookup.
+  @@index([vehicleId, type])
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { CarIcon } from "lucide-react";
 
 import { getBrandColor } from "@/lib/car-catalog";
@@ -23,7 +24,7 @@ export function ModelThumb({
 
   if (image && !failed) {
     return (
-      <img
+      <Image
         src={image}
         alt={`${brandName} ${model}`}
         width={size}

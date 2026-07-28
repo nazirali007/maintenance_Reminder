@@ -6,6 +6,10 @@ import { getMaintenanceDueInfo } from "@/lib/maintenance";
  * Creates an OVERDUE notification for each maintenance item that has become
  * overdue, skipping items that already have an unread OVERDUE notification
  * so this can be called on every dashboard load without spamming duplicates.
+ *
+ * Batches the dedup check and the inserts into a fixed number of queries
+ * regardless of how many vehicles/items a user has, instead of one query per
+ * overdue item.
  */
 export async function syncOverdueNotifications(userId: string) {
   const vehicles = await prisma.vehicle.findMany({
@@ -13,32 +17,36 @@ export async function syncOverdueNotifications(userId: string) {
     include: { maintenanceItems: true },
   });
 
-  for (const vehicle of vehicles) {
-    for (const item of vehicle.maintenanceItems) {
-      const { isOverdue } = getMaintenanceDueInfo(item, vehicle.currentMileage);
-      if (!isOverdue) continue;
+  const overdue = vehicles.flatMap((vehicle) =>
+    vehicle.maintenanceItems
+      .filter((item) => getMaintenanceDueInfo(item, vehicle.currentMileage).isOverdue)
+      .map((item) => ({ item, vehicle }))
+  );
 
-      const existing = await prisma.notification.findFirst({
-        where: {
-          maintenanceItemId: item.id,
-          type: "OVERDUE",
-          status: "UNREAD",
-        },
-      });
+  if (overdue.length === 0) return;
 
-      if (existing) continue;
+  const existing = await prisma.notification.findMany({
+    where: {
+      maintenanceItemId: { in: overdue.map(({ item }) => item.id) },
+      type: "OVERDUE",
+      status: "UNREAD",
+    },
+    select: { maintenanceItemId: true },
+  });
+  const alreadyNotified = new Set(existing.map((n) => n.maintenanceItemId));
 
-      await prisma.notification.create({
-        data: {
-          userId,
-          type: "OVERDUE",
-          title: `${item.name} is overdue`,
-          message: `${vehicle.brand} ${vehicle.model} — ${item.name} is now overdue.`,
-          maintenanceItemId: item.id,
-        },
-      });
-    }
-  }
+  const toCreate = overdue.filter(({ item }) => !alreadyNotified.has(item.id));
+  if (toCreate.length === 0) return;
+
+  await prisma.notification.createMany({
+    data: toCreate.map(({ item, vehicle }) => ({
+      userId,
+      type: "OVERDUE" as const,
+      title: `${item.name} is overdue`,
+      message: `${vehicle.brand} ${vehicle.model} — ${item.name} is now overdue.`,
+      maintenanceItemId: item.id,
+    })),
+  });
 }
 
 export function getUnreadNotifications(userId: string) {

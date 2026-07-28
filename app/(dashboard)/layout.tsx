@@ -1,3 +1,5 @@
+import { after } from "next/server";
+
 import { auth } from "@/auth";
 import { syncOverdueNotifications, getUnreadNotifications } from "@/lib/server/notifications";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -13,8 +15,12 @@ export default async function DashboardGroupLayout({
 
   let notifications: { id: string; title: string; message: string }[] = [];
   if (session?.user?.id) {
-    await syncOverdueNotifications(session.user.id);
-    notifications = await getUnreadNotifications(session.user.id);
+    const userId = session.user.id;
+    // Read existing notifications for this render; sync (which only ever
+    // writes) runs after the response is sent so it never adds latency to
+    // the page load. Any newly-overdue item shows up on the next visit.
+    notifications = await getUnreadNotifications(userId);
+    after(() => syncOverdueNotifications(userId));
   }
 
   return (
