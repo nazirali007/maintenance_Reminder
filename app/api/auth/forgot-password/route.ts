@@ -2,8 +2,11 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/rate-limit";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -17,6 +20,16 @@ export async function POST(request: Request) {
   }
 
   const { email } = parsed.data;
+
+  const { allowed } = await checkRateLimit(
+    `forgot-password:${email}`,
+    RATE_LIMIT,
+    RATE_WINDOW_MS
+  );
+  if (!allowed) {
+    return rateLimitedResponse();
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
 
   // Always respond with the same message so this endpoint can't be used

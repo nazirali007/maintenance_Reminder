@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Settings",
+};
 
 export default async function SettingsPage() {
   const session = await auth();

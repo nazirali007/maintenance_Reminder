@@ -1,9 +1,14 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { AddVehicleDialog } from "@/components/vehicles/add-vehicle-dialog";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
+
+export const metadata: Metadata = {
+  title: "Your Vehicles",
+};
 
 export default async function VehiclesPage() {
   const session = await auth();

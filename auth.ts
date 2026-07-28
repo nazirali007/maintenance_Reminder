@@ -5,6 +5,10 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema, otpVerifySchema } from "@/lib/validations/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const LOGIN_RATE_LIMIT = 10;
+const LOGIN_RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -22,6 +26,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorize: async (credentials) => {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
+
+        const { allowed } = await checkRateLimit(
+          `login:${parsed.data.email}`,
+          LOGIN_RATE_LIMIT,
+          LOGIN_RATE_WINDOW_MS
+        );
+        if (!allowed) return null;
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
@@ -49,6 +60,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const { email, otp } = parsed.data;
+
+        const { allowed } = await checkRateLimit(
+          `otp-verify:${email}`,
+          LOGIN_RATE_LIMIT,
+          LOGIN_RATE_WINDOW_MS
+        );
+        if (!allowed) return null;
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;

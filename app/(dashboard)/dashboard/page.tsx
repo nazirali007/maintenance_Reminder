@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,10 @@ import { BrandMarquee } from "@/components/dashboard/brand-marquee";
 import { VehicleHero } from "@/components/dashboard/vehicle-hero";
 import { BrandIcon } from "@/components/vehicles/brand-icon";
 import { CarPhoto } from "@/components/vehicles/car-photo";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function DashboardPage() {
   const session = await auth();

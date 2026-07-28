@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+// Pages that only make sense when logged out — an authenticated visitor
+// gets bounced to the dashboard instead of seeing them.
+const GUEST_ONLY_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
 
-function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.some(
+// Pages anyone can view regardless of auth state. Includes dynamic
+// file-convention routes with no extension in their URL (e.g. the OG image)
+// — those must stay reachable by social-media crawlers, which never carry a
+// session cookie, and wouldn't otherwise be excluded by the static-file
+// matcher below.
+const PUBLIC_PATHS = ["/about", "/opengraph-image"];
+
+function matchesPath(paths: string[], pathname: string) {
+  return paths.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 }
@@ -20,7 +29,11 @@ export default auth((req) => {
     );
   }
 
-  if (isPublicPath(pathname)) {
+  if (matchesPath(PUBLIC_PATHS, pathname)) {
+    return NextResponse.next();
+  }
+
+  if (matchesPath(GUEST_ONLY_PATHS, pathname)) {
     if (isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", nextUrl));
     }

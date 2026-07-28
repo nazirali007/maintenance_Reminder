@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Maintenance Reminder
 
-## Getting Started
+Track every vehicle's service history and get reminded before maintenance falls due — by an estimate based on your driving pattern, not just when you happen to open the app.
 
-First, run the development server:
+## Features
+
+- Track multiple vehicles per account, each with brand/model logos and photos
+- Per-item maintenance tracking (interval in km and/or a 1-year date window)
+- A checklist-style "log a service" flow covering common maintenance items
+- Health score and upcoming-maintenance view per vehicle
+- Email sign-in via one-time code, plus Google OAuth and password login
+- A daily background job that estimates today's odometer reading from your
+  driving history and emails you if a service is likely due — even if you
+  haven't opened the app in weeks
+
+## Tech stack
+
+- [Next.js](https://nextjs.org) (App Router, Turbopack) + React 19
+- [Prisma](https://www.prisma.io) + PostgreSQL (developed against [Supabase](https://supabase.com))
+- [Auth.js](https://authjs.dev) (Google OAuth, credentials, email OTP)
+- [Resend](https://resend.com) for transactional email
+- Tailwind CSS v4 + shadcn/ui (base-ui primitives) + `react-hook-form` + `zod`
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env   # fill in the values described below
+npx prisma migrate dev
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See `.env.example` for the full list and where to get each value. In short, you'll need:
 
-## Learn More
+- A Postgres database (`DATABASE_URL` / `DIRECT_URL`)
+- `AUTH_SECRET` — generate with `openssl rand -base64 33`
+- Google OAuth credentials (`AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`)
+- A [Resend](https://resend.com) API key (`RESEND_API_KEY`, `EMAIL_FROM`) for OTP/password-reset/reminder emails
+- `CRON_SECRET` — generate the same way as `AUTH_SECRET`; protects the daily reminder job
 
-To learn more about Next.js, take a look at the following resources:
+### The daily reminder job
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`GET /api/cron/maintenance-check` runs the estimation + reminder logic for every vehicle. It's secret-protected — pass `Authorization: Bearer $CRON_SECRET`. `vercel.json` is already configured to run it once a day if deployed to Vercel; on another host, schedule the same request with cron, a GitHub Action, or a service like cron-job.org.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/(dashboard)/` — authenticated pages (dashboard, vehicles, settings)
+- `app/(auth)/` — login, register, password reset
+- `app/api/` — route handlers (vehicles, maintenance items, notifications, auth, cron)
+- `lib/` — business logic (maintenance due-status calculation, mileage projection, email, validation schemas)
+- `prisma/schema.prisma` — data model

@@ -75,6 +75,15 @@ model PasswordResetToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// Simple fixed-window rate limiter, keyed by e.g. "otp-request:user@example.com"
+// or "register:1.2.3.4". Not perfectly atomic under heavy concurrency, but
+// that's an acceptable tradeoff at this app's scale.
+model RateLimitEntry {
+  key         String   @id
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+}
+
 enum FuelType {
   PETROL
   DIESEL

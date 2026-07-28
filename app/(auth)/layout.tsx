@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
+
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Footer } from "@/components/layout/footer";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+};
 
 export default function AuthLayout({
   children,
@@ -6,7 +13,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden p-4">
+    <div className="relative flex flex-1 flex-col overflow-hidden">
       <div
         className="absolute inset-0 -z-20 bg-cover bg-center"
         style={{ backgroundImage: "url('/project_loginBG.webp')" }}
@@ -17,7 +24,12 @@ export default function AuthLayout({
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
-      <div className="relative w-full max-w-sm">{children}</div>
+
+      <div className="flex flex-1 items-center justify-center p-4">
+        <div className="relative w-full max-w-sm">{children}</div>
+      </div>
+
+      <Footer />
     </div>
   );
 }

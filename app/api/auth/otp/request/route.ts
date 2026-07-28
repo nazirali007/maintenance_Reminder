@@ -3,8 +3,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { sendOtpEmail } from "@/lib/email";
 import { otpRequestSchema } from "@/lib/validations/auth";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/rate-limit";
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -18,6 +21,16 @@ export async function POST(request: Request) {
   }
 
   const { email } = parsed.data;
+
+  const { allowed } = await checkRateLimit(
+    `otp-request:${email}`,
+    RATE_LIMIT,
+    RATE_WINDOW_MS
+  );
+  if (!allowed) {
+    return rateLimitedResponse();
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
 
   // Always respond with the same message so this endpoint can't be used

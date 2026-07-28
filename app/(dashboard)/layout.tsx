@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { syncOverdueNotifications, getUnreadNotifications } from "@/lib/notifications";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 export default async function DashboardGroupLayout({
   children,
@@ -29,6 +30,7 @@ export default async function DashboardGroupLayout({
           notifications={notifications}
         />
         <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+        <Footer />
       </div>
     </div>
   );
