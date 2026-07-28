@@ -7,6 +7,7 @@ import { MenuIcon, LogOutIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { SidebarLogo } from "@/components/layout/sidebar-logo";
 import {
   Sheet,
   SheetContent,
@@ -57,7 +58,7 @@ export function Navbar({
         <SheetContent side="left">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
-              <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" />
+              <SidebarLogo />
               Maintenance Reminder
             </SheetTitle>
           </SheetHeader>
