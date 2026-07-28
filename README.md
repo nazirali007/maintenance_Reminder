@@ -2,6 +2,37 @@
 
 Track every vehicle's service history and get reminded before maintenance falls due — by an estimate based on your driving pattern, not just when you happen to open the app.
 
+## What is this, in plain English?
+
+Most people forget to get their car serviced on time. You either remember
+because something starts sounding wrong, or a mechanic points it out during
+an unrelated visit — by which point you may have already driven past the
+point where an oil change, brake check, or tyre rotation was actually due.
+
+This app is a simple way to stay ahead of that:
+
+1. **Add your vehicle(s).** Brand, model, current odometer reading — pick
+   from real photos and logos, or just type it in.
+2. **Log what's been serviced and when**, either item by item (Engine Oil,
+   Brakes, Tyres, etc.) or by checking off a simple checklist the next time
+   you get work done on the car. Each item can have its own rule — e.g.
+   "Engine Oil every 5,000 km" or "Coolant every 40,000 km or 1 year,
+   whichever comes first."
+3. **The app watches your driving pattern.** Every time you update your
+   odometer, it remembers the reading and the date. From that history, it
+   can estimate roughly how many kilometers you drive per day.
+4. **Even if you forget to open the app for a few weeks**, it uses that
+   estimate to guess where your odometer probably is *today*, and checks
+   that guess against everything you've told it needs servicing. If
+   something looks like it's crossed the line, it emails you — so you find
+   out from the app, not from a warning light or a breakdown.
+5. **It also gently nags you** to update your real odometer reading every
+   couple of weeks, so its guesses stay accurate.
+
+In short: you tell it about your car once, keep it roughly updated, and it
+keeps an eye on maintenance so you don't have to remember every interval for
+every part yourself.
+
 ## Features
 
 - Track multiple vehicles per account, each with brand/model logos and photos
