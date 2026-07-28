@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { profileSchema } from "@/lib/validations/settings";
 
 export async function PATCH(request: Request) {

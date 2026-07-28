@@ -1,9 +1,9 @@
 import { randomInt } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import { sendOtpEmail } from "@/lib/email";
+import { prisma } from "@/lib/server/prisma";
+import { sendOtpEmail } from "@/lib/server/email";
 import { otpRequestSchema } from "@/lib/validations/auth";
-import { checkRateLimit, rateLimitedResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/server/rate-limit";
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RATE_LIMIT = 5;

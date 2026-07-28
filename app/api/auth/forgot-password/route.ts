@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
-import { prisma } from "@/lib/prisma";
-import { sendPasswordResetEmail } from "@/lib/email";
+import { prisma } from "@/lib/server/prisma";
+import { sendPasswordResetEmail } from "@/lib/server/email";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
-import { checkRateLimit, rateLimitedResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/server/rate-limit";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT = 5;

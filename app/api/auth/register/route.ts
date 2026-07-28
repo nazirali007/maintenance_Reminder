@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { registerSchema } from "@/lib/validations/auth";
-import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/server/rate-limit";
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour

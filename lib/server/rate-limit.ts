@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import "server-only";
+import { prisma } from "@/lib/server/prisma";
 
 export interface RateLimitResult {
   allowed: boolean;

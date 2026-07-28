@@ -1,6 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import "server-only";
+import { prisma } from "@/lib/server/prisma";
 import { projectCurrentMileage, type OdometerLogLike } from "@/lib/odometer-projection";
-import { sendMaintenanceDueEmail, sendOdometerUpdateNudgeEmail } from "@/lib/email";
+import { sendMaintenanceDueEmail, sendOdometerUpdateNudgeEmail } from "@/lib/server/email";
 
 const RENOTIFY_WINDOW_DAYS = 7;
 const NUDGE_THRESHOLD_DAYS = 15;

@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { syncOverdueNotifications, getUnreadNotifications } from "@/lib/notifications";
+import { syncOverdueNotifications, getUnreadNotifications } from "@/lib/server/notifications";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";

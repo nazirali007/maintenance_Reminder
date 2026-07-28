@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { resetPasswordSchema } from "@/lib/validations/auth";
 
 export async function POST(request: Request) {

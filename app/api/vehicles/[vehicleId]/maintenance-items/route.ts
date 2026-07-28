@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { maintenanceChecklistSchema } from "@/lib/validations/maintenance";
 import { shouldLogOdometerReading } from "@/lib/odometer-projection";
 

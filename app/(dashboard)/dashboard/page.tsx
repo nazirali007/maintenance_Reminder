@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { cn, getGreeting } from "@/lib/utils";
 import { computeHealthScore, getHealthScoreStatus, sortByUrgency } from "@/lib/maintenance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { vehicleSchema } from "@/lib/validations/vehicle";
 
 export async function GET() {

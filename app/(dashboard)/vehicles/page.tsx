@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { AddVehicleDialog } from "@/components/vehicles/add-vehicle-dialog";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 

@@ -1,4 +1,4 @@
-import { runDailyMaintenanceCheck } from "@/lib/maintenance-cron";
+import { runDailyMaintenanceCheck } from "@/lib/server/maintenance-cron";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
