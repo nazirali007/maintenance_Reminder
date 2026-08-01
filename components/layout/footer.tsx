@@ -12,7 +12,7 @@ export function Footer() {
             About
           </Link>
           <a
-            href="mailto:support@example.com"
+            href="mailto:thecarvault8@gmail.com"
             className="hover:text-foreground"
           >
             Contact

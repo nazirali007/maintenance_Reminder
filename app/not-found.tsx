@@ -13,7 +13,9 @@ export default function NotFound() {
       <p className="max-w-sm text-sm text-muted-foreground">
         The page you&apos;re looking for doesn&apos;t exist or may have been moved.
       </p>
-      <Button render={<Link href="/" />}>Back to safety</Button>
+      <Button nativeButton={false} render={<Link href="/" />}>
+        Back to safety
+      </Button>
     </div>
   );
 }

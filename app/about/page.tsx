@@ -47,7 +47,10 @@ export default async function AboutPage() {
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button render={<Link href={session?.user ? "/dashboard" : "/login"} />}>
+          <Button
+            nativeButton={false}
+            render={<Link href={session?.user ? "/dashboard" : "/login"} />}
+          >
             {session?.user ? "Go to Dashboard" : "Sign in"}
           </Button>
         </div>
@@ -82,10 +85,10 @@ export default async function AboutPage() {
           <MailIcon size={20} className="text-muted-foreground" />
           <p className="font-medium">Questions or feedback?</p>
           <a
-            href="mailto:support@example.com"
+            href="mailto:thecarvault8@gmail.com"
             className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
-            support@example.com
+            thecarvault8@gmail.com
           </a>
         </div>
       </main>

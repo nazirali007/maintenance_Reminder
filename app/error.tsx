@@ -31,7 +31,9 @@ export default function ErrorPage({
         <Button variant="outline" onClick={() => reset()}>
           Try again
         </Button>
-        <Button render={<Link href="/dashboard" />}>Go to Dashboard</Button>
+        <Button nativeButton={false} render={<Link href="/dashboard" />}>
+          Go to Dashboard
+        </Button>
       </div>
     </div>
   );
