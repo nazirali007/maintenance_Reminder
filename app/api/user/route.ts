@@ -1,12 +1,10 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { profileSchema } from "@/lib/validations/settings";
 
 export async function PATCH(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const body = await request.json();
   const parsed = profileSchema.safeParse(body);
@@ -19,7 +17,7 @@ export async function PATCH(request: Request) {
   }
 
   const user = await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: userId },
     data: {
       name: parsed.data.name,
       phone: parsed.data.phone || null,
@@ -31,12 +29,10 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
-  await prisma.user.delete({ where: { id: session.user.id } });
+  await prisma.user.delete({ where: { id: userId } });
 
   return Response.json({ success: true });
 }

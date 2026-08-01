@@ -1,22 +1,14 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { maintenanceItemSchema } from "@/lib/validations/maintenance";
 
-async function loadOwnedItem(
-  session: { user: { id: string } },
-  vehicleId: string,
-  itemId: string
-) {
+async function loadOwnedItem(userId: string, vehicleId: string, itemId: string) {
   const item = await prisma.maintenanceItem.findUnique({
     where: { id: itemId },
     include: { vehicle: true },
   });
 
-  if (
-    !item ||
-    item.vehicleId !== vehicleId ||
-    item.vehicle.userId !== session.user.id
-  ) {
+  if (!item || item.vehicleId !== vehicleId || item.vehicle.userId !== userId) {
     return null;
   }
 
@@ -27,18 +19,12 @@ export async function PATCH(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]/maintenance-items/[itemId]">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { vehicleId, itemId } = await ctx.params;
 
-  const existing = await loadOwnedItem(
-    { user: { id: session.user.id } },
-    vehicleId,
-    itemId
-  );
+  const existing = await loadOwnedItem(userId, vehicleId, itemId);
   if (!existing) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
@@ -71,18 +57,12 @@ export async function DELETE(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]/maintenance-items/[itemId]">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { vehicleId, itemId } = await ctx.params;
 
-  const existing = await loadOwnedItem(
-    { user: { id: session.user.id } },
-    vehicleId,
-    itemId
-  );
+  const existing = await loadOwnedItem(userId, vehicleId, itemId);
   if (!existing) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }

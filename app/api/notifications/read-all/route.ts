@@ -1,14 +1,12 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 
 export async function PATCH() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   await prisma.notification.updateMany({
-    where: { userId: session.user.id, status: "UNREAD" },
+    where: { userId, status: "UNREAD" },
     data: { status: "READ" },
   });
 

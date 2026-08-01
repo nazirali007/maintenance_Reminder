@@ -1,5 +1,5 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { maintenanceChecklistSchema } from "@/lib/validations/maintenance";
 import { shouldLogOdometerReading } from "@/lib/odometer-projection";
 
@@ -9,10 +9,8 @@ export async function POST(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]/maintenance-items">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { vehicleId } = await ctx.params;
 
@@ -20,7 +18,7 @@ export async function POST(
     where: { id: vehicleId },
   });
 
-  if (!vehicle || vehicle.userId !== session.user.id) {
+  if (!vehicle || vehicle.userId !== userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 

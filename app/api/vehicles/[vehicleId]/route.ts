@@ -1,5 +1,5 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { vehicleSchema } from "@/lib/validations/vehicle";
 import { shouldLogOdometerReading } from "@/lib/odometer-projection";
 
@@ -7,10 +7,8 @@ export async function GET(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { vehicleId } = await ctx.params;
 
@@ -19,7 +17,7 @@ export async function GET(
     include: { maintenanceItems: true },
   });
 
-  if (!vehicle || vehicle.userId !== session.user.id) {
+  if (!vehicle || vehicle.userId !== userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -30,10 +28,8 @@ export async function DELETE(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { vehicleId } = await ctx.params;
 
@@ -41,7 +37,7 @@ export async function DELETE(
     where: { id: vehicleId },
   });
 
-  if (!existing || existing.userId !== session.user.id) {
+  if (!existing || existing.userId !== userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -54,10 +50,8 @@ export async function PATCH(
   request: Request,
   ctx: RouteContext<"/api/vehicles/[vehicleId]">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { vehicleId } = await ctx.params;
 
@@ -65,7 +59,7 @@ export async function PATCH(
     where: { id: vehicleId },
   });
 
-  if (!existing || existing.userId !== session.user.id) {
+  if (!existing || existing.userId !== userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 

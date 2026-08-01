@@ -1,14 +1,12 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 
 export async function PATCH(
   request: Request,
   ctx: RouteContext<"/api/notifications/[notificationId]">
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await requireUserId();
+  if (!userId) return unauthorizedResponse();
 
   const { notificationId } = await ctx.params;
 
@@ -16,7 +14,7 @@ export async function PATCH(
     where: { id: notificationId },
   });
 
-  if (!notification || notification.userId !== session.user.id) {
+  if (!notification || notification.userId !== userId) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
