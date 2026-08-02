@@ -1,10 +1,14 @@
 import "server-only";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | undefined;
+
+function getResend() {
+  return (resend ??= new Resend(process.env.RESEND_API_KEY));
+}
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
     to,
     subject: "Reset your password",
@@ -21,7 +25,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 }
 
 export async function sendOtpEmail(to: string, code: string) {
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
     to,
     subject: `${code} is your sign-in code`,
@@ -52,7 +56,7 @@ export async function sendMaintenanceDueEmail(
     reasonDate && "it's been over a year since it was last serviced",
   ].filter(Boolean);
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
     to,
     subject: `${itemName} may be due — ${vehicleLabel}`,
@@ -74,7 +78,7 @@ export async function sendOdometerUpdateNudgeEmail(
 ) {
   const { vehicleLabel, daysSinceLastUpdate } = params;
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
     to,
     subject: `Update your odometer for ${vehicleLabel}`,
