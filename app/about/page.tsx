@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Maintenance Reminder helps you track every vehicle's service history and reminds you before anything falls due.",
+    "CarSalhakar helps you track every vehicle's service history and reminds you before anything falls due.",
 };
 
 const FEATURES = [
@@ -43,7 +43,7 @@ export default async function AboutPage() {
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
           <SidebarLogo />
-          <span className="text-lg font-semibold">Maintenance Reminder</span>
+          <span className="text-lg font-semibold">CarSalhakar</span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -58,7 +58,7 @@ export default async function AboutPage() {
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-16">
         <div className="flex flex-col gap-4 text-center">
-          <h1 className="text-3xl font-semibold">About Maintenance Reminder</h1>
+          <h1 className="text-3xl font-semibold">About CarSalhakar</h1>
           <p className="mx-auto max-w-xl text-muted-foreground">
             A simple way to keep track of your vehicles&apos; maintenance — so a
             missed oil change or an overdue brake service never sneaks up on

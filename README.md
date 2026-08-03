@@ -1,4 +1,4 @@
-# Maintenance Reminder
+# CarSalhakar
 
 Track every vehicle's service history and get reminded before maintenance falls due — by an estimate based on your driving pattern, not just when you happen to open the app.
 

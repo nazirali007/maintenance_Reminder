@@ -15,7 +15,7 @@ const comicRelief = Comic_Relief({
 });
 
 const siteUrl = getSiteUrl();
-const title = "Maintenance Reminder";
+const title = "CarSalhakar";
 const description =
   "Track every vehicle's service history and get reminded — by estimate, not just when you remember to check — before maintenance falls due.";
 

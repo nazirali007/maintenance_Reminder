@@ -59,7 +59,7 @@ export function Navbar({
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <SidebarLogo />
-              Maintenance Reminder
+              CarSalhakar
             </SheetTitle>
           </SheetHeader>
           <div className="px-4">

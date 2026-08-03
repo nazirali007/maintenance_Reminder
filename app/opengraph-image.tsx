@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Maintenance Reminder";
+export const alt = "CarSalhakar";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -35,7 +35,7 @@ export default async function OpengraphImage() {
         >
           🔧
         </div>
-        <div style={{ fontSize: 64, fontWeight: 700 }}>Maintenance Reminder</div>
+        <div style={{ fontSize: 64, fontWeight: 700 }}>CarSalhakar</div>
         <div style={{ fontSize: 28, color: "#9aa1ac", marginTop: 20 }}>
           Never miss a service again
         </div>
