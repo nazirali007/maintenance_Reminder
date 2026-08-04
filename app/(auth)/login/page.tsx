@@ -30,14 +30,14 @@ export default function LoginPage() {
 
         <GoogleSignInButton />
       </CardContent>
-      <CardFooter className="justify-center">
+      {/* <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-foreground underline underline-offset-4">
             Sign up
           </Link>
         </p>
-      </CardFooter>
+      </CardFooter> */}
     </Card>
   );
 }

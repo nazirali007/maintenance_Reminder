@@ -14,7 +14,13 @@
       "Bash(rm -f /private/tmp/claude-501/-Users-naziralisiddiqui-Projects-maintenanceReminder/f61ebdad-dbfe-488b-907f-4f34fa3a461b/scratchpad/e2e-brand.mjs)",
       "Bash(node e2e-edit.mjs)",
       "Bash(rm -f /private/tmp/claude-501/-Users-naziralisiddiqui-Projects-maintenanceReminder/f61ebdad-dbfe-488b-907f-4f34fa3a461b/scratchpad/e2e-edit.mjs)",
-      "Bash(node e2e-layout2.mjs)"
+      "Bash(node e2e-layout2.mjs)",
+      "Bash(node -e \"console.log\\(process.version\\)\")",
+      "Bash(node --help)",
+      "Bash(curl -s -i -X POST http://localhost:3000/api/auth/otp/request -H \"Content-Type: application/json\" -d '{\"email\":\"itsnazirali1010@gmail.com\"}')",
+      "Bash(curl -s http://localhost:3000/api/_debug/users)",
+      "Bash(curl -s http://localhost:3000/api/temp-debug-otp)",
+      "Bash(curl -s -X POST http://localhost:3000/api/temp-debug-otp -H \"Content-Type: application/json\" -d '{\"email\":\"itsnazirali1010@gmail.com\"}')"
     ]
   }
 }

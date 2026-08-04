@@ -68,9 +68,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!allowed) return null;
 
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
-
         const tokens = await prisma.verificationToken.findMany({
           where: { identifier: email, expires: { gt: new Date() } },
         });
@@ -89,7 +86,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { identifier: email },
         });
 
-        return user;
+        return prisma.user.upsert({
+          where: { email },
+          update: {},
+          create: { email, emailVerified: new Date() },
+        });
       },
     }),
   ],

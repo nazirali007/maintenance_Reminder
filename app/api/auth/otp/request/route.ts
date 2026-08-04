@@ -31,17 +31,12 @@ export async function POST(request: Request) {
     return rateLimitedResponse();
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-
-  // Always respond with the same message so this endpoint can't be used
-  // to enumerate which emails have accounts.
+  // The response is identical whether or not an account already exists for
+  // this email — verifying the OTP auto-creates the account if needed, so
+  // there's nothing to enumerate.
   const genericResponse = Response.json({
-    message: "If an account exists for that email, a code has been sent.",
+    message: "If your email is valid, a code has been sent.",
   });
-
-  if (!user) {
-    return genericResponse;
-  }
 
   const code = randomInt(100000, 1000000).toString();
   const hashedCode = await bcrypt.hash(code, 12);
