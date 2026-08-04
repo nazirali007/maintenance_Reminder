@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { MenuIcon, LogOutIcon } from "lucide-react";
+import { MenuIcon, LogOutIcon, MoonIcon, SunIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle, useThemeToggle } from "@/components/theme-toggle";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { SidebarLogo } from "@/components/layout/sidebar-logo";
 import {
@@ -21,12 +21,17 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   NotificationBell,
+  NotificationMenuItems,
   type NotificationItem,
 } from "@/components/layout/notification-bell";
 
@@ -44,7 +49,9 @@ export function Navbar({
   notifications: NotificationItem[];
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { mounted, isDark, toggle } = useThemeToggle();
   const initials = (user.name ?? user.email ?? "?").charAt(0).toUpperCase();
+  const unreadCount = notifications.length;
 
   return (
     <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">
@@ -68,11 +75,18 @@ export function Navbar({
         </SheetContent>
       </Sheet>
 
-      <div className="flex-1" />
+      <span className="absolute left-1/2 -translate-x-1/2 text-base font-semibold md:hidden">
+        CarSalhakar
+      </span>
+
+      <div className="hidden flex-1 md:block" />
 
       <div className="flex items-center gap-2">
-        <NotificationBell notifications={notifications} />
-        <ThemeToggle />
+        <div className="hidden items-center gap-2 md:flex">
+          <NotificationBell notifications={notifications} />
+          <ThemeToggle />
+        </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger
             render={<Button variant="ghost" className="gap-2 px-2" />}
@@ -92,6 +106,32 @@ export function Navbar({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+
+            <div className="md:hidden">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Notifications
+                  {unreadCount > 0 && (
+                    <span className="ml-auto flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent className="w-72">
+                    <NotificationMenuItems notifications={notifications} />
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              {mounted && (
+                <DropdownMenuItem onClick={toggle}>
+                  {isDark ? <SunIcon /> : <MoonIcon />}
+                  {isDark ? "Light mode" : "Dark mode"}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+            </div>
+
             <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOutIcon />
               Sign out

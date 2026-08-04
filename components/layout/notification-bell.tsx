@@ -20,13 +20,8 @@ export interface NotificationItem {
   message: string;
 }
 
-export function NotificationBell({
-  notifications,
-}: {
-  notifications: NotificationItem[];
-}) {
+function useNotificationActions() {
   const router = useRouter();
-  const unreadCount = notifications.length;
 
   async function markAsRead(id: string) {
     await fetch(`/api/notifications/${id}`, { method: "PATCH" });
@@ -37,6 +32,63 @@ export function NotificationBell({
     await fetch("/api/notifications/read-all", { method: "PATCH" });
     router.refresh();
   }
+
+  return { markAsRead, markAllAsRead };
+}
+
+export function NotificationMenuItems({
+  notifications,
+}: {
+  notifications: NotificationItem[];
+}) {
+  const { markAsRead, markAllAsRead } = useNotificationActions();
+  const unreadCount = notifications.length;
+
+  return (
+    <>
+      <DropdownMenuGroup>
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notifications</span>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="text-xs font-normal text-muted-foreground underline underline-offset-4"
+            >
+              Mark all as read
+            </button>
+          )}
+        </DropdownMenuLabel>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      {notifications.length === 0 ? (
+        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+          No new notifications
+        </div>
+      ) : (
+        notifications.map((notification) => (
+          <DropdownMenuItem
+            key={notification.id}
+            className="flex flex-col items-start gap-0.5"
+            onClick={() => markAsRead(notification.id)}
+          >
+            <span className="text-sm font-medium">{notification.title}</span>
+            <span className="text-xs text-muted-foreground">
+              {notification.message}
+            </span>
+          </DropdownMenuItem>
+        ))
+      )}
+    </>
+  );
+}
+
+export function NotificationBell({
+  notifications,
+}: {
+  notifications: NotificationItem[];
+}) {
+  const unreadCount = notifications.length;
 
   return (
     <DropdownMenu>
@@ -52,39 +104,7 @@ export function NotificationBell({
         <span className="sr-only">Notifications</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="flex items-center justify-between">
-            <span>Notifications</span>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="text-xs font-normal text-muted-foreground underline underline-offset-4"
-              >
-                Mark all as read
-              </button>
-            )}
-          </DropdownMenuLabel>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        {notifications.length === 0 ? (
-          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-            No new notifications
-          </div>
-        ) : (
-          notifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              className="flex flex-col items-start gap-0.5"
-              onClick={() => markAsRead(notification.id)}
-            >
-              <span className="text-sm font-medium">{notification.title}</span>
-              <span className="text-xs text-muted-foreground">
-                {notification.message}
-              </span>
-            </DropdownMenuItem>
-          ))
-        )}
+        <NotificationMenuItems notifications={notifications} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

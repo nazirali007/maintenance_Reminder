@@ -28,11 +28,11 @@ export const metadata: Metadata = {
   description,
   icons: {
     icon: [
-      { url: "/webFevicon192x192.png", sizes: "16x16", type: "image/png" },
-      { url: "/webFevicon192x192.png", sizes: "32x32", type: "image/png" },
-      { url: "/webFevicon192x192.png", sizes: "any" },
+      { url: "/fevicon-icon.png", sizes: "16x16", type: "image/png" },
+      { url: "/fevicon-icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/fevicon-icon.png", sizes: "any" },
     ],
-    apple: "/webFevicon192x192.png",
+    apple: "/fevicon-icon.png",
   },
   openGraph: {
     type: "website",

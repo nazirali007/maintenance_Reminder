@@ -5,17 +5,19 @@ let transporter: nodemailer.Transporter | undefined;
 
 function getTransporter() {
   return (transporter ??= nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.resend.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_APP_PASSWORD,
+      user: "resend",
+      pass: process.env.RESEND_API_KEY,
     },
   }));
 }
 
 async function sendMail(to: string, subject: string, html: string) {
   await getTransporter().sendMail({
-    from: process.env.EMAIL_FROM ?? process.env.EMAIL_USER,
+    from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
     to,
     subject,
     html,

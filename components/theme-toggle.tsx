@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const emptySubscribe = () => () => {};
 
-export function ThemeToggle() {
+export function useThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -16,18 +16,28 @@ export function ThemeToggle() {
     () => false
   );
 
+  const isDark = mounted && resolvedTheme === "dark";
+
+  return {
+    mounted,
+    isDark,
+    toggle: () => setTheme(isDark ? "light" : "dark"),
+  };
+}
+
+export function ThemeToggle() {
+  const { mounted, isDark, toggle } = useThemeToggle();
+
   if (!mounted) {
     return <Button variant="ghost" size="icon" aria-hidden className="opacity-0" />;
   }
-
-  const isDark = resolvedTheme === "dark";
 
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggle}
     >
       {isDark ? <SunIcon /> : <MoonIcon />}
     </Button>

@@ -1,24 +1,9 @@
-"use client";
-
-import { useSyncExternalStore } from "react";
-import { useTheme } from "next-themes";
 import Image from "next/image";
 
-const emptySubscribe = () => () => {};
-
 export function SidebarLogo() {
-  const { resolvedTheme } = useTheme();
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
-
-  const src = mounted && resolvedTheme === "light" ? "/LightModeLogo.png" : "/DarkModeLogo.png";
-
   return (
     <Image
-      src={src}
+      src="/Main-logo.png"
       alt=""
       width={32}
       height={32}
