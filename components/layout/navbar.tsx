@@ -21,13 +21,15 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   NotificationBell,
@@ -108,21 +110,24 @@ export function Navbar({
             <DropdownMenuSeparator />
 
             <div className="md:hidden">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  Notifications
-                  {unreadCount > 0 && (
-                    <span className="ml-auto flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-                      {unreadCount > 9 ? "9+" : unreadCount}
+              <Accordion>
+                <AccordionItem value="notifications" className="border-none">
+                  <AccordionTrigger className="rounded-md px-1.5 py-1 text-sm font-normal hover:no-underline data-panel-open:bg-accent data-panel-open:text-accent-foreground">
+                   
+                    <span className="flex items-center gap-1.5">
+                      Notifications
+                      {unreadCount > 0 && (
+                        <span className="flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="w-72">
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-0">
                     <NotificationMenuItems notifications={notifications} />
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
               {mounted && (
                 <DropdownMenuItem onClick={toggle}>
                   {isDark ? <SunIcon /> : <MoonIcon />}
