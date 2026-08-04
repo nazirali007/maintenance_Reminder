@@ -38,29 +38,36 @@ function useNotificationActions() {
 
 export function NotificationMenuItems({
   notifications,
+  showTitle = true,
 }: {
   notifications: NotificationItem[];
+  showTitle?: boolean;
 }) {
   const { markAsRead, markAllAsRead } = useNotificationActions();
   const unreadCount = notifications.length;
+  const showHeaderRow = showTitle || unreadCount > 0;
 
   return (
     <>
-      <DropdownMenuGroup>
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              onClick={markAllAsRead}
-              className="text-xs font-normal text-muted-foreground underline underline-offset-4"
-            >
-              Mark all as read
-            </button>
-          )}
-        </DropdownMenuLabel>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
+      {showHeaderRow && (
+        <>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex items-center justify-between">
+              {showTitle && <span>Notifications</span>}
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllAsRead}
+                  className="ml-auto text-xs font-normal text-muted-foreground underline underline-offset-4"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+        </>
+      )}
       {notifications.length === 0 ? (
         <div className="px-2 py-4 text-center text-sm text-muted-foreground">
           No new notifications

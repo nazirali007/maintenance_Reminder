@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { MenuIcon, LogOutIcon, MoonIcon, SunIcon } from "lucide-react";
+import { MenuIcon, LogOutIcon, MoonIcon, SunIcon, BellIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle, useThemeToggle } from "@/components/theme-toggle";
@@ -113,8 +113,8 @@ export function Navbar({
               <Accordion>
                 <AccordionItem value="notifications" className="border-none">
                   <AccordionTrigger className="rounded-md px-1.5 py-1 text-sm font-normal hover:no-underline data-panel-open:bg-accent data-panel-open:text-accent-foreground">
-                   
                     <span className="flex items-center gap-1.5">
+                      <BellIcon className="size-4" />
                       Notifications
                       {unreadCount > 0 && (
                         <span className="flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
@@ -124,7 +124,10 @@ export function Navbar({
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="pb-0">
-                    <NotificationMenuItems notifications={notifications} />
+                    <NotificationMenuItems
+                      notifications={notifications}
+                      showTitle={false}
+                    />
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
