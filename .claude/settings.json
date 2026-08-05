@@ -20,7 +20,8 @@
       "Bash(curl -s -i -X POST http://localhost:3000/api/auth/otp/request -H \"Content-Type: application/json\" -d '{\"email\":\"itsnazirali1010@gmail.com\"}')",
       "Bash(curl -s http://localhost:3000/api/_debug/users)",
       "Bash(curl -s http://localhost:3000/api/temp-debug-otp)",
-      "Bash(curl -s -X POST http://localhost:3000/api/temp-debug-otp -H \"Content-Type: application/json\" -d '{\"email\":\"itsnazirali1010@gmail.com\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/temp-debug-otp -H \"Content-Type: application/json\" -d '{\"email\":\"itsnazirali1010@gmail.com\"}')",
+      "Bash(curl -s -i -X POST \"https://carsalahkar.site/api/auth/otp/request?_=$\\(date +%s\\)\" -H \"Content-Type: application/json\" -H \"Cache-Control: no-cache\" -d '{\"email\":\"itsnazirali1010+prodtest4@gmail.com\"}')"
     ]
   }
 }
