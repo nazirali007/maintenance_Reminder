@@ -143,6 +143,9 @@ export default async function DashboardPage() {
                 <AddMaintenanceItemDialog
                   vehicleId={vehicle.id}
                   currentMileage={vehicle.currentMileage}
+                  lastServiceMileage={vehicle.lastServiceMileage}
+                  lastServiceDate={vehicle.lastServiceDate}
+                  trackedItems={vehicle.maintenanceItems}
                 />
               </div>
 

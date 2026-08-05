@@ -2,8 +2,10 @@
 
 import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
+import { InfoIcon } from "lucide-react";
 
-import { MAINTENANCE_CATALOG } from "@/lib/maintenance-catalog";
+import { MAINTENANCE_CATALOG, type MaintenanceCatalogItem } from "@/lib/maintenance-catalog";
+import { getMaintenanceDueInfo } from "@/lib/maintenance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,14 +18,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Field, FieldLabel } from "@/components/ui/field";
+
+interface TrackedItem {
+  name: string;
+  intervalKm: number;
+  lastServiceMileage: number;
+  lastServiceDate: Date | null;
+}
 
 export function AddMaintenanceItemDialog({
   vehicleId,
   currentMileage,
+  lastServiceMileage,
+  lastServiceDate,
+  trackedItems,
 }: {
   vehicleId: string;
   currentMileage: number;
+  lastServiceMileage: number;
+  lastServiceDate: Date | null;
+  trackedItems: TrackedItem[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -54,6 +70,19 @@ export function AddMaintenanceItemDialog({
       }
       return next;
     });
+  }
+
+  // "Recommended" = the item's own service history (if it's already being
+  // tracked on this vehicle) or, failing that, the vehicle's own last-service
+  // baseline says it's due-soon or overdue at the current odometer reading.
+  function isRecommended(item: MaintenanceCatalogItem): boolean {
+    const tracked = trackedItems.find((t) => t.name === item.label);
+    const baseline = tracked ?? {
+      intervalKm: item.defaultIntervalKm,
+      lastServiceMileage,
+      lastServiceDate,
+    };
+    return getMaintenanceDueInfo(baseline, currentMileage).status !== "ok";
   }
 
   async function onSubmit(e: SubmitEvent) {
@@ -145,22 +174,41 @@ export function AddMaintenanceItemDialog({
                   </p>
                   <div className="flex flex-col gap-2">
                     {section.items.map((item) => (
-                      <label
+                      <div
                         key={item.key}
-                        className="flex items-start gap-2.5 rounded-lg border border-border p-2.5 transition-colors has-data-checked:border-primary/40 has-data-checked:bg-primary/5"
+                        className="flex items-start justify-between gap-2 rounded-lg border border-border p-2.5 transition-colors has-data-checked:border-primary/40 has-data-checked:bg-primary/5"
                       >
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={checkedKeys.has(item.key)}
-                          onCheckedChange={() => toggleItem(item.key)}
-                        />
-                        <span className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium">{item.label}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {item.hint}
+                        <label className="flex flex-1 items-start gap-2.5">
+                          <Checkbox
+                            className="mt-0.5"
+                            checked={checkedKeys.has(item.key)}
+                            onCheckedChange={() => toggleItem(item.key)}
+                          />
+                          <span className="text-sm font-medium">
+                            {item.label}
+                            {isRecommended(item) && (
+                              <span className="ml-1.5 text-xs font-normal text-warning">
+                                (Recommended)
+                              </span>
+                            )}
                           </span>
-                        </span>
-                      </label>
+                        </label>
+
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <button
+                                type="button"
+                                aria-label={`About ${item.label}`}
+                                className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
+                              />
+                            }
+                          >
+                            <InfoIcon className="size-4" />
+                          </TooltipTrigger>
+                          <TooltipContent side="left">{item.hint}</TooltipContent>
+                        </Tooltip>
+                      </div>
                     ))}
                   </div>
                 </div>
