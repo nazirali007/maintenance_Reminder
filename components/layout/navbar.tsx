@@ -77,7 +77,8 @@ export function Navbar({
         </SheetContent>
       </Sheet>
 
-      <span className="absolute left-1/2 -translate-x-1/2 text-base font-semibold md:hidden">
+      <span className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 text-base font-semibold md:hidden">
+        <SidebarLogo />
         CarSalhakar
       </span>
 
