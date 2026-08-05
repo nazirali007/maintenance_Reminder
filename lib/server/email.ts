@@ -55,19 +55,27 @@ export async function sendMaintenanceDueEmail(
     itemName: string;
     reasonKm: boolean;
     reasonDate: boolean;
+    dueSoon?: boolean;
   }
 ) {
-  const { vehicleLabel, itemName, reasonKm, reasonDate } = params;
+  const { vehicleLabel, itemName, reasonKm, reasonDate, dueSoon = false } = params;
   const reasons = [
-    reasonKm && "your estimated mileage has crossed its service interval",
-    reasonDate && "it's been over a year since it was last serviced",
+    reasonKm &&
+      (dueSoon
+        ? "your estimated mileage is approaching its service interval"
+        : "your estimated mileage has crossed its service interval"),
+    reasonDate &&
+      (dueSoon
+        ? "it's almost been a year since it was last serviced"
+        : "it's been over a year since it was last serviced"),
   ].filter(Boolean);
+  const verb = dueSoon ? "will be due soon" : "may be due";
 
   await sendMail(
     to,
-    `${itemName} may be due — ${vehicleLabel}`,
+    `${itemName} ${verb} — ${vehicleLabel}`,
     `
-      <p><strong>${vehicleLabel}</strong> — <strong>${itemName}</strong> may be due for service.</p>
+      <p><strong>${vehicleLabel}</strong> — <strong>${itemName}</strong> ${verb} for service.</p>
       <p>This is an estimate based on ${reasons.join(" and ")}, projected from your last recorded odometer reading — not a confirmed reading.</p>
       <p>Please open the app and update your current odometer to confirm.</p>
     `

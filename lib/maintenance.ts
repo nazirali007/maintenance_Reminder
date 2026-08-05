@@ -1,40 +1,71 @@
+import { daysBetween } from "@/lib/odometer-projection";
+
 interface MaintenanceLike {
   intervalKm: number;
   lastServiceMileage: number;
+  lastServiceDate: Date | null;
 }
 
 export type MaintenanceStatus = "ok" | "due-soon" | "overdue";
 
-const DUE_SOON_THRESHOLD_KM = 500;
+export const DUE_SOON_KM_THRESHOLD = 500;
+export const DUE_SOON_DAYS = 15;
+const SERVICE_INTERVAL_DAYS = 365;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export interface MaintenanceDueInfo {
   remainingKm: number;
+  /** Days left until the 1-year service anniversary; null if no lastServiceDate is on record. */
+  remainingDays: number | null;
   isOverdue: boolean;
   status: MaintenanceStatus;
   label: string;
+  /** Projected calendar date this item will be due, from the driving-rate estimate. Display-only. */
+  estimatedDueDate: Date | null;
 }
 
 export function getMaintenanceDueInfo(
   item: MaintenanceLike,
-  currentMileage: number
+  currentMileage: number,
+  options: { now?: Date; dailyRateKm?: number } = {}
 ): MaintenanceDueInfo {
-  const dueAtMileage = item.lastServiceMileage + item.intervalKm;
-  const remainingKm = dueAtMileage - currentMileage;
-  const isOverdue = remainingKm <= 0;
+  const now = options.now ?? new Date();
+
+  const remainingKm = item.lastServiceMileage + item.intervalKm - currentMileage;
+  const kmOverdue = remainingKm <= 0;
+  const kmDueSoon = !kmOverdue && remainingKm <= DUE_SOON_KM_THRESHOLD;
+
+  let remainingDays: number | null = null;
+  let dateOverdue = false;
+  let dateDueSoon = false;
+  if (item.lastServiceDate) {
+    remainingDays = Math.round(
+      SERVICE_INTERVAL_DAYS - daysBetween(item.lastServiceDate, now)
+    );
+    dateOverdue = remainingDays <= 0;
+    dateDueSoon = !dateOverdue && remainingDays <= DUE_SOON_DAYS;
+  }
+
+  const isOverdue = kmOverdue || dateOverdue;
+  const isDueSoon = !isOverdue && (kmDueSoon || dateDueSoon);
   const status: MaintenanceStatus = isOverdue
     ? "overdue"
-    : remainingKm <= DUE_SOON_THRESHOLD_KM
+    : isDueSoon
       ? "due-soon"
       : "ok";
 
-  return {
-    remainingKm,
-    isOverdue,
-    status,
-    label: isOverdue
-      ? "Overdue"
-      : `Due in ${remainingKm.toLocaleString("en-US")} km`,
-  };
+  const estimatedDueDate =
+    !isOverdue && remainingKm > 0 && options.dailyRateKm
+      ? new Date(now.getTime() + (remainingKm / options.dailyRateKm) * MS_PER_DAY)
+      : null;
+
+  const label = isOverdue
+    ? "Overdue"
+    : dateDueSoon
+      ? `Due in ${remainingDays} ${remainingDays === 1 ? "day" : "days"}`
+      : `Due in ${remainingKm.toLocaleString("en-US")} km`;
+
+  return { remainingKm, remainingDays, isOverdue, status, label, estimatedDueDate };
 }
 
 /**
@@ -69,13 +100,21 @@ export function getHealthScoreStatus(score: number): MaintenanceStatus {
   return "overdue";
 }
 
+const STATUS_RANK: Record<MaintenanceStatus, number> = {
+  overdue: 0,
+  "due-soon": 1,
+  ok: 2,
+};
+
 export function sortByUrgency<T extends MaintenanceLike>(
   items: T[],
-  currentMileage: number
+  currentMileage: number,
+  options: { now?: Date } = {}
 ): T[] {
-  return [...items].sort(
-    (a, b) =>
-      getMaintenanceDueInfo(a, currentMileage).remainingKm -
-      getMaintenanceDueInfo(b, currentMileage).remainingKm
-  );
+  return [...items].sort((a, b) => {
+    const infoA = getMaintenanceDueInfo(a, currentMileage, options);
+    const infoB = getMaintenanceDueInfo(b, currentMileage, options);
+    const rankDiff = STATUS_RANK[infoA.status] - STATUS_RANK[infoB.status];
+    return rankDiff !== 0 ? rankDiff : infoA.remainingKm - infoB.remainingKm;
+  });
 }

@@ -6,7 +6,11 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
 import { cn, getGreeting } from "@/lib/utils";
 import { computeHealthScore, getHealthScoreStatus, sortByUrgency } from "@/lib/maintenance";
-import { daysBetween, ODOMETER_NUDGE_THRESHOLD_DAYS } from "@/lib/odometer-projection";
+import {
+  daysBetween,
+  estimateDailyRate,
+  ODOMETER_NUDGE_THRESHOLD_DAYS,
+} from "@/lib/odometer-projection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddMaintenanceItemDialog } from "@/components/dashboard/add-maintenance-item-dialog";
 import { UpcomingMaintenanceList } from "@/components/dashboard/upcoming-maintenance-list";
@@ -37,7 +41,7 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       include: {
         maintenanceItems: true,
-        odometerLogs: { orderBy: { recordedAt: "desc" }, take: 1 },
+        odometerLogs: { orderBy: { recordedAt: "desc" }, take: 5 },
       },
     }),
   ]);
@@ -78,10 +82,15 @@ export default async function DashboardPage() {
       {vehicles.map((vehicle, index) => {
         const healthScore = computeHealthScore(vehicle.maintenanceItems, vehicle.currentMileage);
         const healthStatus = getHealthScoreStatus(healthScore);
-        const upcomingItems = sortByUrgency(vehicle.maintenanceItems, vehicle.currentMileage);
+        const upcomingItems = sortByUrgency(vehicle.maintenanceItems, vehicle.currentMileage, { now });
         const lastOdometerUpdate = vehicle.odometerLogs[0]?.recordedAt ?? vehicle.updatedAt;
         const odometerOverdue =
           daysBetween(lastOdometerUpdate, now) >= ODOMETER_NUDGE_THRESHOLD_DAYS;
+        const odometerLogsForRate =
+          vehicle.odometerLogs.length > 0
+            ? vehicle.odometerLogs
+            : [{ reading: vehicle.currentMileage, recordedAt: vehicle.updatedAt }];
+        const { kmPerDay } = estimateDailyRate(odometerLogsForRate);
 
         return (
           <Card
@@ -132,6 +141,7 @@ export default async function DashboardPage() {
                 vehicleId={vehicle.id}
                 items={upcomingItems}
                 currentMileage={vehicle.currentMileage}
+                dailyRateKm={kmPerDay}
               />
 
               <div className="flex items-center justify-between gap-3">

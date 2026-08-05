@@ -7,6 +7,7 @@ export function MaintenanceItemRow({
   vehicleId,
   item,
   currentMileage,
+  dailyRateKm,
 }: {
   vehicleId: string;
   item: {
@@ -18,8 +19,13 @@ export function MaintenanceItemRow({
     notes: string | null;
   };
   currentMileage: number;
+  dailyRateKm?: number;
 }) {
-  const { label, status } = getMaintenanceDueInfo(item, currentMileage);
+  const { label, status, estimatedDueDate } = getMaintenanceDueInfo(
+    item,
+    currentMileage,
+    { dailyRateKm }
+  );
 
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-border px-4 py-3">
@@ -44,6 +50,19 @@ export function MaintenanceItemRow({
           </div>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Serviced at {item.lastServiceMileage.toLocaleString("en-US")} km
+        {estimatedDueDate && (
+          <>
+            {" "}
+            · Est. due around{" "}
+            {estimatedDueDate.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </>
+        )}
+      </p>
       {item.notes && (
         <p className="text-xs text-muted-foreground">{item.notes}</p>
       )}

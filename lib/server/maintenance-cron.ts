@@ -5,6 +5,7 @@ import {
   ODOMETER_NUDGE_THRESHOLD_DAYS,
   type OdometerLogLike,
 } from "@/lib/odometer-projection";
+import { DUE_SOON_KM_THRESHOLD, DUE_SOON_DAYS } from "@/lib/maintenance";
 import { sendMaintenanceDueEmail, sendOdometerUpdateNudgeEmail } from "@/lib/server/email";
 
 const RENOTIFY_WINDOW_DAYS = 7;
@@ -15,7 +16,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export interface CronSummary {
   vehiclesChecked: number;
-  estimatedOverdueCreated: number;
+  remindersCreated: number;
   nudgesCreated: number;
   emailsSent: number;
   emailFailures: number;
@@ -34,7 +35,7 @@ export async function runDailyMaintenanceCheck(
 
   const summary: CronSummary = {
     vehiclesChecked: 0,
-    estimatedOverdueCreated: 0,
+    remindersCreated: 0,
     nudgesCreated: 0,
     emailsSent: 0,
     emailFailures: 0,
@@ -62,24 +63,34 @@ export async function runDailyMaintenanceCheck(
       const vehicleLabel = `${vehicle.brand} ${vehicle.model}`;
 
       for (const item of vehicle.maintenanceItems) {
-        const kmDue = estimatedMileage - item.lastServiceMileage >= item.intervalKm;
-        const dateDue =
-          item.lastServiceDate != null &&
-          daysSince(item.lastServiceDate, now) >= ONE_YEAR_DAYS;
+        const remainingKm = item.lastServiceMileage + item.intervalKm - estimatedMileage;
+        const kmDue = remainingKm <= 0;
+        const kmDueSoon = !kmDue && remainingKm <= DUE_SOON_KM_THRESHOLD;
 
-        if (!kmDue && !dateDue) continue;
+        const daysSinceService =
+          item.lastServiceDate != null ? daysSince(item.lastServiceDate, now) : null;
+        const dateDue = daysSinceService != null && daysSinceService >= ONE_YEAR_DAYS;
+        const dateDueSoon =
+          !dateDue &&
+          daysSinceService != null &&
+          daysSinceService >= ONE_YEAR_DAYS - DUE_SOON_DAYS;
+
+        const isDue = kmDue || dateDue;
+        const isDueSoon = !isDue && (kmDueSoon || dateDueSoon);
+
+        if (!isDue && !isDueSoon) continue;
 
         const recentWindow = new Date(now.getTime() - RENOTIFY_WINDOW_DAYS * MS_PER_DAY);
         const existing = await prisma.notification.findFirst({
           where: {
             maintenanceItemId: item.id,
-            type: { in: ["OVERDUE", "ESTIMATED_OVERDUE"] },
+            type: isDue ? { in: ["OVERDUE", "ESTIMATED_OVERDUE"] } : "DUE_SOON",
             createdAt: { gte: recentWindow },
           },
         });
         if (existing) continue;
 
-        summary.estimatedOverdueCreated += 1;
+        summary.remindersCreated += 1;
 
         if (dryRun) continue;
 
@@ -88,9 +99,11 @@ export async function runDailyMaintenanceCheck(
             userId: vehicle.userId,
             vehicleId: vehicle.id,
             maintenanceItemId: item.id,
-            type: "ESTIMATED_OVERDUE",
-            title: `${item.name} may be due`,
-            message: `${vehicleLabel} — ${item.name} may be due for service (estimated).`,
+            type: isDue ? "ESTIMATED_OVERDUE" : "DUE_SOON",
+            title: isDue ? `${item.name} may be due` : `${item.name} due soon`,
+            message: isDue
+              ? `${vehicleLabel} — ${item.name} may be due for service (estimated).`
+              : `${vehicleLabel} — ${item.name} will likely be due for service soon (estimated).`,
           },
         });
 
@@ -98,8 +111,9 @@ export async function runDailyMaintenanceCheck(
           await sendMaintenanceDueEmail(vehicle.user.email, {
             vehicleLabel,
             itemName: item.name,
-            reasonKm: kmDue,
-            reasonDate: dateDue,
+            reasonKm: kmDue || kmDueSoon,
+            reasonDate: dateDue || dateDueSoon,
+            dueSoon: isDueSoon,
           });
           summary.emailsSent += 1;
         } catch (err) {

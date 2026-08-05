@@ -13,6 +13,7 @@ export function UpcomingMaintenanceList({
   vehicleId,
   items,
   currentMileage,
+  dailyRateKm,
 }: {
   vehicleId: string;
   items: {
@@ -24,6 +25,7 @@ export function UpcomingMaintenanceList({
     notes: string | null;
   }[];
   currentMileage: number;
+  dailyRateKm?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -54,6 +56,7 @@ export function UpcomingMaintenanceList({
             vehicleId={vehicleId}
             item={item}
             currentMileage={currentMileage}
+            dailyRateKm={dailyRateKm}
           />
         </div>
       ))}
