@@ -1,11 +1,15 @@
 import "server-only";
 import { prisma } from "@/lib/server/prisma";
-import { projectCurrentMileage, type OdometerLogLike } from "@/lib/odometer-projection";
+import {
+  projectCurrentMileage,
+  ODOMETER_NUDGE_THRESHOLD_DAYS,
+  type OdometerLogLike,
+} from "@/lib/odometer-projection";
 import { sendMaintenanceDueEmail, sendOdometerUpdateNudgeEmail } from "@/lib/server/email";
 
 const RENOTIFY_WINDOW_DAYS = 7;
-const NUDGE_THRESHOLD_DAYS = 15;
-const NUDGE_WINDOW_DAYS = 15;
+const NUDGE_THRESHOLD_DAYS = ODOMETER_NUDGE_THRESHOLD_DAYS;
+const NUDGE_WINDOW_DAYS = ODOMETER_NUDGE_THRESHOLD_DAYS;
 const ONE_YEAR_DAYS = 365;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

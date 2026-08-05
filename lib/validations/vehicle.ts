@@ -19,3 +19,9 @@ export const vehicleSchema = z.object({
 });
 
 export type VehicleInput = z.infer<typeof vehicleSchema>;
+
+export const odometerUpdateSchema = z.object({
+  reading: z.coerce.number().int().min(0, "Odometer must be 0 or greater"),
+});
+
+export type OdometerUpdateInput = z.infer<typeof odometerUpdateSchema>;

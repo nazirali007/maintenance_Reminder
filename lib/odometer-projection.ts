@@ -7,6 +7,9 @@ const FALLBACK_KM_PER_DAY = 30;
 const ROLLING_WINDOW = 5;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+/** Days without an odometer update before we nudge the user (dashboard highlight + email). */
+export const ODOMETER_NUDGE_THRESHOLD_DAYS = 10;
+
 export function daysBetween(a: Date, b: Date): number {
   return (b.getTime() - a.getTime()) / MS_PER_DAY;
 }

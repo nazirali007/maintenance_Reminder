@@ -6,9 +6,11 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
 import { cn, getGreeting } from "@/lib/utils";
 import { computeHealthScore, getHealthScoreStatus, sortByUrgency } from "@/lib/maintenance";
+import { daysBetween, ODOMETER_NUDGE_THRESHOLD_DAYS } from "@/lib/odometer-projection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddMaintenanceItemDialog } from "@/components/dashboard/add-maintenance-item-dialog";
 import { UpcomingMaintenanceList } from "@/components/dashboard/upcoming-maintenance-list";
+import { UpdateOdometerButton } from "@/components/dashboard/update-odometer-button";
 import { BrandMarquee } from "@/components/dashboard/brand-marquee";
 import { VehicleHero } from "@/components/dashboard/vehicle-hero";
 import { BrandIcon } from "@/components/vehicles/brand-icon";
@@ -33,10 +35,14 @@ export default async function DashboardPage() {
     prisma.vehicle.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
-      include: { maintenanceItems: true },
+      include: {
+        maintenanceItems: true,
+        odometerLogs: { orderBy: { recordedAt: "desc" }, take: 1 },
+      },
     }),
   ]);
 
+  const now = new Date();
   const greeting = getGreeting();
   const firstName = user?.name?.trim().split(" ")[0];
 
@@ -73,6 +79,9 @@ export default async function DashboardPage() {
         const healthScore = computeHealthScore(vehicle.maintenanceItems, vehicle.currentMileage);
         const healthStatus = getHealthScoreStatus(healthScore);
         const upcomingItems = sortByUrgency(vehicle.maintenanceItems, vehicle.currentMileage);
+        const lastOdometerUpdate = vehicle.odometerLogs[0]?.recordedAt ?? vehicle.updatedAt;
+        const odometerOverdue =
+          daysBetween(lastOdometerUpdate, now) >= ODOMETER_NUDGE_THRESHOLD_DAYS;
 
         return (
           <Card
@@ -125,12 +134,19 @@ export default async function DashboardPage() {
                 currentMileage={vehicle.currentMileage}
               />
 
-              <p className="text-sm text-muted-foreground">
-                Odometer:{" "}
-                <span className="font-medium text-foreground">
-                  {vehicle.currentMileage.toLocaleString("en-US")} km
-                </span>
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Odometer:{" "}
+                  <span className="font-medium text-foreground">
+                    {vehicle.currentMileage.toLocaleString("en-US")} km
+                  </span>
+                </p>
+                <UpdateOdometerButton
+                  vehicleId={vehicle.id}
+                  currentMileage={vehicle.currentMileage}
+                  isOverdue={odometerOverdue}
+                />
+              </div>
             </CardContent>
           </Card>
         );
