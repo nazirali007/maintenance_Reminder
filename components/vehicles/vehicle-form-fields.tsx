@@ -130,12 +130,32 @@ export function VehicleFormFields({
         <FieldError errors={[errors.currentMileage]} />
       </Field>
 
+      <Field data-invalid={!!errors.lastServiceMileage}>
+        <FieldLabel htmlFor="lastServiceMileage">Last Service Odometer</FieldLabel>
+        <Input
+          id="lastServiceMileage"
+          type="number"
+          placeholder="40000 km"
+          {...register("lastServiceMileage")}
+        />
+        <FieldError errors={[errors.lastServiceMileage]} />
+      </Field>
+
       <Field data-invalid={!!errors.purchaseDate}>
         <FieldLabel htmlFor="purchaseDate">
           Purchase Date <span className="text-muted-foreground">(optional)</span>
         </FieldLabel>
         <Input id="purchaseDate" type="date" {...register("purchaseDate")} />
         <FieldError errors={[errors.purchaseDate]} />
+      </Field>
+
+      <Field data-invalid={!!errors.lastServiceDate}>
+        <FieldLabel htmlFor="lastServiceDate">
+          Last Service Date{" "}
+          <span className="text-muted-foreground">(optional)</span>
+        </FieldLabel>
+        <Input id="lastServiceDate" type="date" {...register("lastServiceDate")} />
+        <FieldError errors={[errors.lastServiceDate]} />
       </Field>
     </FieldGroup>
   );

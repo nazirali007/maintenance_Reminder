@@ -28,13 +28,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const { variant, purchaseDate, ...rest } = parsed.data;
+  const { variant, purchaseDate, lastServiceDate, ...rest } = parsed.data;
 
   const vehicle = await prisma.vehicle.create({
     data: {
       ...rest,
       variant: variant || null,
       purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+      lastServiceDate: lastServiceDate ? new Date(lastServiceDate) : null,
       userId,
     },
   });

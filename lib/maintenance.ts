@@ -13,6 +13,10 @@ export const DUE_SOON_DAYS = 15;
 const SERVICE_INTERVAL_DAYS = 365;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+/** Blanket whole-car service rule (distinct from per-item intervals): 10,000km or 1 year since the car was last serviced, whichever comes first. */
+export const VEHICLE_SERVICE_INTERVAL_KM = 10000;
+export const VEHICLE_SERVICE_DUE_SOON_KM = 1000;
+
 export interface MaintenanceDueInfo {
   remainingKm: number;
   /** Days left until the 1-year service anniversary; null if no lastServiceDate is on record. */
@@ -24,23 +28,26 @@ export interface MaintenanceDueInfo {
   estimatedDueDate: Date | null;
 }
 
-export function getMaintenanceDueInfo(
-  item: MaintenanceLike,
+function computeDueInfo(
+  intervalKm: number,
+  dueSoonKm: number,
+  lastServiceMileage: number,
+  lastServiceDate: Date | null,
   currentMileage: number,
   options: { now?: Date; dailyRateKm?: number } = {}
 ): MaintenanceDueInfo {
   const now = options.now ?? new Date();
 
-  const remainingKm = item.lastServiceMileage + item.intervalKm - currentMileage;
+  const remainingKm = lastServiceMileage + intervalKm - currentMileage;
   const kmOverdue = remainingKm <= 0;
-  const kmDueSoon = !kmOverdue && remainingKm <= DUE_SOON_KM_THRESHOLD;
+  const kmDueSoon = !kmOverdue && remainingKm <= dueSoonKm;
 
   let remainingDays: number | null = null;
   let dateOverdue = false;
   let dateDueSoon = false;
-  if (item.lastServiceDate) {
+  if (lastServiceDate) {
     remainingDays = Math.round(
-      SERVICE_INTERVAL_DAYS - daysBetween(item.lastServiceDate, now)
+      SERVICE_INTERVAL_DAYS - daysBetween(lastServiceDate, now)
     );
     dateOverdue = remainingDays <= 0;
     dateDueSoon = !dateOverdue && remainingDays <= DUE_SOON_DAYS;
@@ -66,6 +73,47 @@ export function getMaintenanceDueInfo(
       : `Due in ${remainingKm.toLocaleString("en-US")} km`;
 
   return { remainingKm, remainingDays, isOverdue, status, label, estimatedDueDate };
+}
+
+export function getMaintenanceDueInfo(
+  item: MaintenanceLike,
+  currentMileage: number,
+  options: { now?: Date; dailyRateKm?: number } = {}
+): MaintenanceDueInfo {
+  return computeDueInfo(
+    item.intervalKm,
+    DUE_SOON_KM_THRESHOLD,
+    item.lastServiceMileage,
+    item.lastServiceDate,
+    currentMileage,
+    options
+  );
+}
+
+interface VehicleServiceLike {
+  currentMileage: number;
+  lastServiceMileage: number;
+  lastServiceDate: Date | null;
+}
+
+/**
+ * The blanket whole-car reminder — separate from per-item tracking (Engine
+ * Oil, Air Filter, etc. each have their own interval). This is the simple
+ * "car needs a service" signal: 10,000km or 1 year since it was last
+ * serviced, whichever comes first.
+ */
+export function getVehicleServiceDueInfo(
+  vehicle: VehicleServiceLike,
+  options: { now?: Date; dailyRateKm?: number } = {}
+): MaintenanceDueInfo {
+  return computeDueInfo(
+    VEHICLE_SERVICE_INTERVAL_KM,
+    VEHICLE_SERVICE_DUE_SOON_KM,
+    vehicle.lastServiceMileage,
+    vehicle.lastServiceDate,
+    vehicle.currentMileage,
+    options
+  );
 }
 
 /**

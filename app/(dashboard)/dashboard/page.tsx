@@ -5,7 +5,12 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
 import { cn, getGreeting } from "@/lib/utils";
-import { computeHealthScore, getHealthScoreStatus, sortByUrgency } from "@/lib/maintenance";
+import {
+  computeHealthScore,
+  getHealthScoreStatus,
+  getVehicleServiceDueInfo,
+  sortByUrgency,
+} from "@/lib/maintenance";
 import {
   daysBetween,
   estimateDailyRate,
@@ -15,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddMaintenanceItemDialog } from "@/components/dashboard/add-maintenance-item-dialog";
 import { UpcomingMaintenanceList } from "@/components/dashboard/upcoming-maintenance-list";
 import { UpdateOdometerButton } from "@/components/dashboard/update-odometer-button";
+import { VehicleServiceAlert } from "@/components/dashboard/vehicle-service-alert";
 import { BrandMarquee } from "@/components/dashboard/brand-marquee";
 import { VehicleHero } from "@/components/dashboard/vehicle-hero";
 import { BrandIcon } from "@/components/vehicles/brand-icon";
@@ -91,6 +97,7 @@ export default async function DashboardPage() {
             ? vehicle.odometerLogs
             : [{ reading: vehicle.currentMileage, recordedAt: vehicle.updatedAt }];
         const { kmPerDay } = estimateDailyRate(odometerLogsForRate);
+        const serviceDueInfo = getVehicleServiceDueInfo(vehicle, { now, dailyRateKm: kmPerDay });
 
         return (
           <Card
@@ -129,6 +136,8 @@ export default async function DashboardPage() {
               </>
             )}
             <CardContent className="flex flex-col gap-4">
+              <VehicleServiceAlert dueInfo={serviceDueInfo} />
+
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Upcoming Maintenance</p>
                 <AddMaintenanceItemDialog
@@ -149,6 +158,10 @@ export default async function DashboardPage() {
                   Odometer:{" "}
                   <span className="font-medium text-foreground">
                     {vehicle.currentMileage.toLocaleString("en-US")} km
+                  </span>
+                  <span className="text-xs"> · Last service: </span>
+                  <span className="text-xs font-medium text-foreground">
+                    {vehicle.lastServiceMileage.toLocaleString("en-US")} km
                   </span>
                 </p>
                 <UpdateOdometerButton

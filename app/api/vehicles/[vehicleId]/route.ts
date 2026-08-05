@@ -73,7 +73,7 @@ export async function PATCH(
     );
   }
 
-  const { variant, purchaseDate, ...rest } = parsed.data;
+  const { variant, purchaseDate, lastServiceDate, ...rest } = parsed.data;
 
   const vehicle = await prisma.vehicle.update({
     where: { id: vehicleId },
@@ -81,6 +81,7 @@ export async function PATCH(
       ...rest,
       variant: variant || null,
       purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+      lastServiceDate: lastServiceDate ? new Date(lastServiceDate) : null,
     },
   });
 

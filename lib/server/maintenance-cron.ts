@@ -5,7 +5,12 @@ import {
   ODOMETER_NUDGE_THRESHOLD_DAYS,
   type OdometerLogLike,
 } from "@/lib/odometer-projection";
-import { DUE_SOON_KM_THRESHOLD, DUE_SOON_DAYS } from "@/lib/maintenance";
+import {
+  DUE_SOON_KM_THRESHOLD,
+  DUE_SOON_DAYS,
+  VEHICLE_SERVICE_INTERVAL_KM,
+  VEHICLE_SERVICE_DUE_SOON_KM,
+} from "@/lib/maintenance";
 import { sendMaintenanceDueEmail, sendOdometerUpdateNudgeEmail } from "@/lib/server/email";
 
 const RENOTIFY_WINDOW_DAYS = 7;
@@ -122,6 +127,75 @@ export async function runDailyMaintenanceCheck(
             vehicleId: vehicle.id,
             error: err instanceof Error ? err.message : String(err),
           });
+        }
+      }
+
+      // The blanket whole-car rule, separate from per-item tracking above:
+      // 10,000km or 1 year since the car itself was last serviced.
+      const vehicleRemainingKm =
+        vehicle.lastServiceMileage + VEHICLE_SERVICE_INTERVAL_KM - estimatedMileage;
+      const vehicleKmDue = vehicleRemainingKm <= 0;
+      const vehicleKmDueSoon =
+        !vehicleKmDue && vehicleRemainingKm <= VEHICLE_SERVICE_DUE_SOON_KM;
+
+      const daysSinceVehicleService =
+        vehicle.lastServiceDate != null
+          ? daysSince(vehicle.lastServiceDate, now)
+          : null;
+      const vehicleDateDue =
+        daysSinceVehicleService != null && daysSinceVehicleService >= ONE_YEAR_DAYS;
+      const vehicleDateDueSoon =
+        !vehicleDateDue &&
+        daysSinceVehicleService != null &&
+        daysSinceVehicleService >= ONE_YEAR_DAYS - DUE_SOON_DAYS;
+
+      const vehicleIsDue = vehicleKmDue || vehicleDateDue;
+      const vehicleIsDueSoon = !vehicleIsDue && (vehicleKmDueSoon || vehicleDateDueSoon);
+
+      if (vehicleIsDue || vehicleIsDueSoon) {
+        const recentWindow = new Date(now.getTime() - RENOTIFY_WINDOW_DAYS * MS_PER_DAY);
+        const existingVehicleReminder = await prisma.notification.findFirst({
+          where: {
+            vehicleId: vehicle.id,
+            maintenanceItemId: null,
+            type: vehicleIsDue ? { in: ["OVERDUE", "ESTIMATED_OVERDUE"] } : "DUE_SOON",
+            createdAt: { gte: recentWindow },
+          },
+        });
+
+        if (!existingVehicleReminder) {
+          summary.remindersCreated += 1;
+
+          if (!dryRun) {
+            await prisma.notification.create({
+              data: {
+                userId: vehicle.userId,
+                vehicleId: vehicle.id,
+                type: vehicleIsDue ? "ESTIMATED_OVERDUE" : "DUE_SOON",
+                title: vehicleIsDue ? "Service may be due" : "Service due soon",
+                message: vehicleIsDue
+                  ? `${vehicleLabel} may be due for its 10,000 km / annual service (estimated).`
+                  : `${vehicleLabel} will likely be due for its 10,000 km / annual service soon (estimated).`,
+              },
+            });
+
+            try {
+              await sendMaintenanceDueEmail(vehicle.user.email, {
+                vehicleLabel,
+                itemName: "Service",
+                reasonKm: vehicleKmDue || vehicleKmDueSoon,
+                reasonDate: vehicleDateDue || vehicleDateDueSoon,
+                dueSoon: vehicleIsDueSoon,
+              });
+              summary.emailsSent += 1;
+            } catch (err) {
+              summary.emailFailures += 1;
+              summary.errors.push({
+                vehicleId: vehicle.id,
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }
         }
       }
 

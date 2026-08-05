@@ -40,6 +40,8 @@ export function EditVehicleDialog({ vehicle }: { vehicle: Vehicle }) {
     transmission: vehicle.transmission,
     year: vehicle.year,
     currentMileage: vehicle.currentMileage,
+    lastServiceMileage: vehicle.lastServiceMileage,
+    lastServiceDate: toDateInputValue(vehicle.lastServiceDate),
     purchaseDate: toDateInputValue(vehicle.purchaseDate),
   };
 
