@@ -11,7 +11,11 @@ import {
   VEHICLE_SERVICE_INTERVAL_KM,
   VEHICLE_SERVICE_DUE_SOON_KM,
 } from "@/lib/maintenance";
-import { sendMaintenanceDueEmail, sendOdometerUpdateNudgeEmail } from "@/lib/server/email";
+import {
+  sendMaintenanceDueSummaryEmail,
+  sendOdometerUpdateNudgeEmail,
+  type MaintenanceDueEntry,
+} from "@/lib/server/email";
 
 const RENOTIFY_WINDOW_DAYS = 7;
 const NUDGE_THRESHOLD_DAYS = ODOMETER_NUDGE_THRESHOLD_DAYS;
@@ -25,7 +29,7 @@ export interface CronSummary {
   nudgesCreated: number;
   emailsSent: number;
   emailFailures: number;
-  errors: { vehicleId: string; error: string }[];
+  errors: { id: string; error: string }[];
 }
 
 function daysSince(date: Date, now: Date): number {
@@ -54,6 +58,19 @@ export async function runDailyMaintenanceCheck(
       odometerLogs: { orderBy: { recordedAt: "desc" }, take: 5 },
     },
   });
+
+  // Collect due-item entries per user across every vehicle in this run, so
+  // each user gets a single digest email instead of one email per item.
+  const dueEntriesByUser = new Map<string, { email: string; entries: MaintenanceDueEntry[] }>();
+
+  function queueDueEntry(userId: string, email: string, entry: MaintenanceDueEntry) {
+    const queued = dueEntriesByUser.get(userId);
+    if (queued) {
+      queued.entries.push(entry);
+    } else {
+      dueEntriesByUser.set(userId, { email, entries: [entry] });
+    }
+  }
 
   for (const vehicle of vehicles) {
     summary.vehiclesChecked += 1;
@@ -112,22 +129,13 @@ export async function runDailyMaintenanceCheck(
           },
         });
 
-        try {
-          await sendMaintenanceDueEmail(vehicle.user.email, {
-            vehicleLabel,
-            itemName: item.name,
-            reasonKm: kmDue || kmDueSoon,
-            reasonDate: dateDue || dateDueSoon,
-            dueSoon: isDueSoon,
-          });
-          summary.emailsSent += 1;
-        } catch (err) {
-          summary.emailFailures += 1;
-          summary.errors.push({
-            vehicleId: vehicle.id,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
+        queueDueEntry(vehicle.userId, vehicle.user.email, {
+          vehicleLabel,
+          itemName: item.name,
+          reasonKm: kmDue || kmDueSoon,
+          reasonDate: dateDue || dateDueSoon,
+          dueSoon: isDueSoon,
+        });
       }
 
       // The blanket whole-car rule, separate from per-item tracking above:
@@ -179,22 +187,13 @@ export async function runDailyMaintenanceCheck(
               },
             });
 
-            try {
-              await sendMaintenanceDueEmail(vehicle.user.email, {
-                vehicleLabel,
-                itemName: "Service",
-                reasonKm: vehicleKmDue || vehicleKmDueSoon,
-                reasonDate: vehicleDateDue || vehicleDateDueSoon,
-                dueSoon: vehicleIsDueSoon,
-              });
-              summary.emailsSent += 1;
-            } catch (err) {
-              summary.emailFailures += 1;
-              summary.errors.push({
-                vehicleId: vehicle.id,
-                error: err instanceof Error ? err.message : String(err),
-              });
-            }
+            queueDueEntry(vehicle.userId, vehicle.user.email, {
+              vehicleLabel,
+              itemName: "Service",
+              reasonKm: vehicleKmDue || vehicleKmDueSoon,
+              reasonDate: vehicleDateDue || vehicleDateDueSoon,
+              dueSoon: vehicleIsDueSoon,
+            });
           }
         }
       }
@@ -235,7 +234,7 @@ export async function runDailyMaintenanceCheck(
             } catch (err) {
               summary.emailFailures += 1;
               summary.errors.push({
-                vehicleId: vehicle.id,
+                id: vehicle.id,
                 error: err instanceof Error ? err.message : String(err),
               });
             }
@@ -244,7 +243,20 @@ export async function runDailyMaintenanceCheck(
       }
     } catch (err) {
       summary.errors.push({
-        vehicleId: vehicle.id,
+        id: vehicle.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  for (const [userId, { email, entries }] of dueEntriesByUser) {
+    try {
+      await sendMaintenanceDueSummaryEmail(email, entries);
+      summary.emailsSent += 1;
+    } catch (err) {
+      summary.emailFailures += 1;
+      summary.errors.push({
+        id: userId,
         error: err instanceof Error ? err.message : String(err),
       });
     }

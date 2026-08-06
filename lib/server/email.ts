@@ -48,35 +48,60 @@ export async function sendOtpEmail(to: string, code: string) {
   );
 }
 
-export async function sendMaintenanceDueEmail(
+export interface MaintenanceDueEntry {
+  vehicleLabel: string;
+  itemName: string;
+  reasonKm: boolean;
+  reasonDate: boolean;
+  dueSoon: boolean;
+}
+
+/**
+ * One email per run per user summarizing every item that just became due —
+ * across all their vehicles — instead of a separate email per item. A user
+ * tracking 5 maintenance items that all cross their threshold on the same
+ * day gets a single digest, not 5 emails.
+ */
+export async function sendMaintenanceDueSummaryEmail(
   to: string,
-  params: {
-    vehicleLabel: string;
-    itemName: string;
-    reasonKm: boolean;
-    reasonDate: boolean;
-    dueSoon?: boolean;
-  }
+  entries: MaintenanceDueEntry[]
 ) {
-  const { vehicleLabel, itemName, reasonKm, reasonDate, dueSoon = false } = params;
-  const reasons = [
-    reasonKm &&
-      (dueSoon
-        ? "your estimated mileage is approaching its service interval"
-        : "your estimated mileage has crossed its service interval"),
-    reasonDate &&
-      (dueSoon
-        ? "it's almost been a year since it was last serviced"
-        : "it's been over a year since it was last serviced"),
-  ].filter(Boolean);
-  const verb = dueSoon ? "will be due soon" : "may be due";
+  if (entries.length === 0) return;
+
+  const anyOverdue = entries.some((e) => !e.dueSoon);
+  const subject =
+    entries.length === 1
+      ? `${entries[0].itemName} ${entries[0].dueSoon ? "will be due soon" : "may be due"} — ${entries[0].vehicleLabel}`
+      : anyOverdue
+        ? `${entries.length} maintenance items may be due`
+        : `${entries.length} maintenance items due soon`;
+
+  const rows = entries
+    .map((e) => {
+      const verb = e.dueSoon ? "will be due soon" : "may be due";
+      const reasons = [
+        e.reasonKm &&
+          (e.dueSoon
+            ? "estimated mileage is approaching its service interval"
+            : "estimated mileage has crossed its service interval"),
+        e.reasonDate &&
+          (e.dueSoon
+            ? "it's almost been a year since it was last serviced"
+            : "it's been over a year since it was last serviced"),
+      ]
+        .filter(Boolean)
+        .join(" and ");
+      return `<li><strong>${e.vehicleLabel}</strong> — <strong>${e.itemName}</strong> ${verb} (${reasons}).</li>`;
+    })
+    .join("");
 
   await sendMail(
     to,
-    `${itemName} ${verb} — ${vehicleLabel}`,
+    subject,
     `
-      <p><strong>${vehicleLabel}</strong> — <strong>${itemName}</strong> ${verb} for service.</p>
-      <p>This is an estimate based on ${reasons.join(" and ")}, projected from your last recorded odometer reading — not a confirmed reading.</p>
+      <p>The following ${entries.length === 1 ? "item needs" : "items need"} attention:</p>
+      <ul>${rows}</ul>
+      <p>These are estimates projected from your last recorded odometer reading — not confirmed readings.</p>
       <p>Please open the app and update your current odometer to confirm.</p>
     `
   );

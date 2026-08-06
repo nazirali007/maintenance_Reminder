@@ -28,7 +28,7 @@ export function BrandMarquee() {
               }}
               className="flex shrink-0 cursor-pointer flex-col items-center gap-1.5 transition-transform duration-300 ease-out will-change-transform hover:[transform:translateY(-4px)_rotateY(18deg)_scale(1.12)]"
             >
-              <BrandIcon brand={brand.name} size={36} />
+              <BrandIcon brand={brand.name} size={36} eager />
               <span className="text-[10px] font-medium text-muted-foreground">
                 {brand.name}
               </span>
