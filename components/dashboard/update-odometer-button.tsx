@@ -73,12 +73,9 @@ export function UpdateOdometerButton({
       <DialogTrigger
         render={
           <Button
-            variant={isOverdue ? "default" : "outline"}
+            variant="default"
             size="sm"
-            className={cn(
-              isOverdue &&
-                "animate-pulse bg-warning text-warning-foreground ring-2 ring-warning/50 hover:bg-warning/90"
-            )}
+            className={cn("cursor-pointer border border-red-500 bg-transparent hover:bg-transparent", isOverdue && "border border-warning text-warning")}
           />
         }
       >

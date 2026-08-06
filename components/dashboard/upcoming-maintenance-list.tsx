@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MaintenanceItemRow } from "@/components/dashboard/maintenance-item-row";
 
-const VISIBLE_COUNT = 2;
+const VISIBLE_COUNT = 1;
 
 export function UpcomingMaintenanceList({
   vehicleId,

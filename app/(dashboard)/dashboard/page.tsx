@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
-import { cn, getGreeting } from "@/lib/utils";
+import { getGreeting } from "@/lib/utils";
 import {
   computeHealthScore,
   getHealthScoreStatus,
@@ -16,15 +16,13 @@ import {
   estimateDailyRate,
   ODOMETER_NUDGE_THRESHOLD_DAYS,
 } from "@/lib/odometer-projection";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { AddMaintenanceItemDialog } from "@/components/dashboard/add-maintenance-item-dialog";
 import { UpcomingMaintenanceList } from "@/components/dashboard/upcoming-maintenance-list";
 import { UpdateOdometerButton } from "@/components/dashboard/update-odometer-button";
 import { VehicleServiceAlert } from "@/components/dashboard/vehicle-service-alert";
 import { BrandMarquee } from "@/components/dashboard/brand-marquee";
 import { VehicleHero } from "@/components/dashboard/vehicle-hero";
-import { BrandIcon } from "@/components/vehicles/brand-icon";
-import { CarPhoto } from "@/components/vehicles/car-photo";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -103,40 +101,14 @@ export default async function DashboardPage() {
           return (
             <Card
               key={vehicle.id}
-              className={cn(
-                "animate-in fade-in slide-in-from-bottom-4 transition-shadow duration-500 [animation-fill-mode:both] hover:shadow-lg",
-                index === 0 && "pt-0",
-                index === 0 && vehicles.length > 1 && "lg:col-span-2"
-              )}
+              className="animate-in fade-in slide-in-from-bottom-4 pt-0 transition-shadow duration-500 [animation-fill-mode:both] hover:shadow-lg"
               style={{ animationDelay: `${150 + index * 120}ms` }}
             >
-              {index === 0 ? (
-                <VehicleHero
-                  vehicle={vehicle}
-                  healthScore={healthScore}
-                  healthStatus={healthStatus}
-                />
-              ) : (
-                <>
-                  <CarPhoto brand={vehicle.brand} model={vehicle.model} />
-                  <CardHeader className="flex items-center gap-3">
-                    <BrandIcon brand={vehicle.brand} size={40} className="shrink-0" />
-                    <CardTitle className="min-w-0 flex-1 truncate">
-                      {vehicle.brand} {vehicle.model}
-                    </CardTitle>
-                    <span
-                      className={cn(
-                        "shrink-0 text-2xl font-semibold transition-transform duration-300 hover:scale-110",
-                        healthStatus === "overdue" && "text-destructive",
-                        healthStatus === "due-soon" && "text-warning",
-                        healthStatus === "ok" && "text-success"
-                      )}
-                    >
-                      {healthScore}%
-                    </span>
-                  </CardHeader>
-                </>
-              )}
+              <VehicleHero
+                vehicle={vehicle}
+                healthScore={healthScore}
+                healthStatus={healthStatus}
+              />
               <CardContent className="flex flex-col gap-4">
                 <VehicleServiceAlert dueInfo={serviceDueInfo} />
 

@@ -6,6 +6,7 @@ import { InfoIcon } from "lucide-react";
 
 import { MAINTENANCE_CATALOG, type MaintenanceCatalogItem } from "@/lib/maintenance-catalog";
 import { getMaintenanceDueInfo } from "@/lib/maintenance";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +42,9 @@ export function AddMaintenanceItemDialog({
   lastServiceDate: Date | null;
   trackedItems: TrackedItem[];
 }) {
+  // Nudge the user until they've logged at least one item for this vehicle —
+  // not for due/overdue items, which already have their own alert above this button.
+  const needsAttention = trackedItems.length === 0;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [odometer, setOdometer] = useState(String(currentMileage));
@@ -129,7 +133,20 @@ export function AddMaintenanceItemDialog({
         if (!nextOpen) resetForm();
       }}
     >
-      <DialogTrigger render={<Button variant="outline">Add Maintenance Item</Button>} />
+      <DialogTrigger
+        render={
+          <Button
+            variant={needsAttention ? "default" : "outline"}
+            className={cn(
+              "cursor-pointer",
+              needsAttention &&
+                "animate-pulse bg-warning text-warning-foreground ring-2 ring-warning/50 hover:bg-warning/90"
+            )}
+          />
+        }
+      >
+        Add Maintenance Item
+      </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add Maintenance Item</DialogTitle>

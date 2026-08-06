@@ -19,7 +19,7 @@ export function VehicleHero({
 }) {
   return (
     <div
-      className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-[21/9]"
+      className="relative aspect-video w-full overflow-hidden"
       style={{ backgroundColor: getBrandColor(vehicle.brand) }}
     >
       <CarPhoto
@@ -49,14 +49,9 @@ export function VehicleHero({
             size={36}
             className="shrink-0 ring-2 ring-white/60"
           />
-          <div className="min-w-0">
-            <p className="text-[10px] font-medium tracking-wide text-white/70 uppercase">
-              Your Vehicle
-            </p>
-            <p className="truncate text-lg leading-tight font-semibold text-white">
-              {vehicle.brand} {vehicle.model}
-            </p>
-          </div>
+          <p className="min-w-0 truncate text-lg leading-tight font-semibold text-white">
+            {vehicle.brand} {vehicle.model}
+          </p>
         </div>
         <span
           className={cn(
