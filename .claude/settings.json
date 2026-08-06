@@ -21,7 +21,14 @@
       "Bash(curl -s http://localhost:3000/api/_debug/users)",
       "Bash(curl -s http://localhost:3000/api/temp-debug-otp)",
       "Bash(curl -s -X POST http://localhost:3000/api/temp-debug-otp -H \"Content-Type: application/json\" -d '{\"email\":\"itsnazirali1010@gmail.com\"}')",
-      "Bash(curl -s -i -X POST \"https://carsalahkar.site/api/auth/otp/request?_=$\\(date +%s\\)\" -H \"Content-Type: application/json\" -H \"Cache-Control: no-cache\" -d '{\"email\":\"itsnazirali1010+prodtest4@gmail.com\"}')"
+      "Bash(curl -s -i -X POST \"https://carsalahkar.site/api/auth/otp/request?_=$\\(date +%s\\)\" -H \"Content-Type: application/json\" -H \"Cache-Control: no-cache\" -d '{\"email\":\"itsnazirali1010+prodtest4@gmail.com\"}')",
+      "Read(//Users/naziralisiddiqui/**)",
+      "Read(//Users/naziralisiddiqui/.oh-my-zsh/**)",
+      "Bash(echo \"SHELL: $SHELL\"; echo \"---/etc/zshrc---\"; cat /etc/zshrc 2>/dev/null | grep -i \"prompt\" ; echo \"---/etc/zprofile---\"; cat /etc/zprofile 2>/dev/null | grep -i \"prompt\"; echo \"---p10k check---\"; grep -n \"p10k\\\\|powerlevel\" ~/.zshrc; echo \"---iterm shell integration---\"; ls ~/.iterm2_shell_integration.zsh 2>/dev/null)",
+      "Read(//private/etc/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/naziralisiddiqui"
     ]
   }
 }
