@@ -1,20 +1,18 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/server/prisma";
 import { registerSchema } from "@/lib/validations/auth";
-import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/server/rate-limit";
+import { enforceRateLimit, getClientIp } from "@/lib/server/rate-limit";
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(request: Request) {
-  const { allowed } = await checkRateLimit(
+  const limited = await enforceRateLimit(
     `register:${getClientIp(request)}`,
     RATE_LIMIT,
     RATE_WINDOW_MS
   );
-  if (!allowed) {
-    return rateLimitedResponse();
-  }
+  if (limited) return limited;
 
   const body = await request.json();
   const parsed = registerSchema.safeParse(body);

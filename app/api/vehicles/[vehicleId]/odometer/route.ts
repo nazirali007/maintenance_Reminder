@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { odometerUpdateSchema } from "@/lib/validations/vehicle";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
+
+const WRITE_RATE_LIMIT = 20;
+const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
 export async function POST(
   request: Request,
@@ -8,6 +12,13 @@ export async function POST(
 ) {
   const userId = await requireUserId();
   if (!userId) return unauthorizedResponse();
+
+  const limited = await enforceRateLimit(
+    `odometer-write:${userId}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW_MS
+  );
+  if (limited) return limited;
 
   const { vehicleId } = await ctx.params;
 

@@ -1,8 +1,19 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/server/prisma";
 import { resetPasswordSchema } from "@/lib/validations/auth";
+import { enforceRateLimit, getClientIp } from "@/lib/server/rate-limit";
+
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 export async function POST(request: Request) {
+  const limited = await enforceRateLimit(
+    `reset-password:${getClientIp(request)}`,
+    RATE_LIMIT,
+    RATE_WINDOW_MS
+  );
+  if (limited) return limited;
+
   const body = await request.json();
   const parsed = resetPasswordSchema.safeParse(body);
 

@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { maintenanceItemSchema } from "@/lib/validations/maintenance";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
+
+const WRITE_RATE_LIMIT = 20;
+const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
 async function loadOwnedItem(userId: string, vehicleId: string, itemId: string) {
   const item = await prisma.maintenanceItem.findUnique({
@@ -21,6 +25,13 @@ export async function PATCH(
 ) {
   const userId = await requireUserId();
   if (!userId) return unauthorizedResponse();
+
+  const limited = await enforceRateLimit(
+    `maintenance-items-write:${userId}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW_MS
+  );
+  if (limited) return limited;
 
   const { vehicleId, itemId } = await ctx.params;
 
@@ -59,6 +70,13 @@ export async function DELETE(
 ) {
   const userId = await requireUserId();
   if (!userId) return unauthorizedResponse();
+
+  const limited = await enforceRateLimit(
+    `maintenance-items-write:${userId}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW_MS
+  );
+  if (limited) return limited;
 
   const { vehicleId, itemId } = await ctx.params;
 

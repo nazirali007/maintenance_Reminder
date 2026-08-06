@@ -3,13 +3,23 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/server/prisma";
 import { sendOtpEmail } from "@/lib/server/email";
 import { otpRequestSchema } from "@/lib/validations/auth";
-import { checkRateLimit, rateLimitedResponse } from "@/lib/server/rate-limit";
+import { enforceRateLimit, getClientIp } from "@/lib/server/rate-limit";
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+// A looser per-IP cap on top of the per-email one, so a single attacker can't
+// email-bomb a stream of different addresses from one machine.
+const IP_RATE_LIMIT = 20;
 
 export async function POST(request: Request) {
+  const ipLimited = await enforceRateLimit(
+    `otp-request-ip:${getClientIp(request)}`,
+    IP_RATE_LIMIT,
+    RATE_WINDOW_MS
+  );
+  if (ipLimited) return ipLimited;
+
   const body = await request.json();
   const parsed = otpRequestSchema.safeParse(body);
 
@@ -22,14 +32,12 @@ export async function POST(request: Request) {
 
   const { email } = parsed.data;
 
-  const { allowed } = await checkRateLimit(
+  const limited = await enforceRateLimit(
     `otp-request:${email}`,
     RATE_LIMIT,
     RATE_WINDOW_MS
   );
-  if (!allowed) {
-    return rateLimitedResponse();
-  }
+  if (limited) return limited;
 
   // The response is identical whether or not an account already exists for
   // this email — verifying the OTP auto-creates the account if needed, so

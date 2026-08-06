@@ -2,8 +2,11 @@ import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { maintenanceChecklistSchema } from "@/lib/validations/maintenance";
 import { shouldLogOdometerReading } from "@/lib/odometer-projection";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
 
 const GENERAL_NOTE_INTERVAL_KM = 200000;
+const WRITE_RATE_LIMIT = 20;
+const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
 export async function POST(
   request: Request,
@@ -11,6 +14,13 @@ export async function POST(
 ) {
   const userId = await requireUserId();
   if (!userId) return unauthorizedResponse();
+
+  const limited = await enforceRateLimit(
+    `maintenance-items-write:${userId}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW_MS
+  );
+  if (limited) return limited;
 
   const { vehicleId } = await ctx.params;
 

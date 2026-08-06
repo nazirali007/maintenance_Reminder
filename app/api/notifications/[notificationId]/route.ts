@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
+
+const WRITE_RATE_LIMIT = 60;
+const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
 export async function PATCH(
   request: Request,
@@ -7,6 +11,13 @@ export async function PATCH(
 ) {
   const userId = await requireUserId();
   if (!userId) return unauthorizedResponse();
+
+  const limited = await enforceRateLimit(
+    `notifications-write:${userId}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW_MS
+  );
+  if (limited) return limited;
 
   const { notificationId } = await ctx.params;
 

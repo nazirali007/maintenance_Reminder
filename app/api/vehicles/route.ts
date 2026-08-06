@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { vehicleSchema } from "@/lib/validations/vehicle";
+import { enforceRateLimit } from "@/lib/server/rate-limit";
+
+const WRITE_RATE_LIMIT = 20;
+const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
 export async function GET() {
   const userId = await requireUserId();
@@ -17,6 +21,13 @@ export async function GET() {
 export async function POST(request: Request) {
   const userId = await requireUserId();
   if (!userId) return unauthorizedResponse();
+
+  const limited = await enforceRateLimit(
+    `vehicles-write:${userId}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW_MS
+  );
+  if (limited) return limited;
 
   const body = await request.json();
   const parsed = vehicleSchema.safeParse(body);
