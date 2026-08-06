@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,9 +20,25 @@ import { VehiclePhotoPreview } from "@/components/vehicles/vehicle-photo-preview
 
 type FieldErrors = Partial<Record<keyof VehicleInput, string[]>>;
 
-export function AddVehicleDialog() {
+/**
+ * `open`/`onOpenChange` let a caller (e.g. clicking a brand in the dashboard
+ * marquee) drive the dialog externally with a pre-selected brand. Without
+ * them it falls back to its own trigger button + internal open state, as
+ * used on the vehicles page.
+ */
+export function AddVehicleDialog({
+  open: openProp,
+  onOpenChange,
+  defaultBrand,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  defaultBrand?: string;
+} = {}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? openProp : internalOpen;
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -35,6 +51,20 @@ export function AddVehicleDialog() {
   } = useForm<VehicleInput>({
     resolver: zodResolver(vehicleSchema),
   });
+
+  useEffect(() => {
+    if (open && defaultBrand) {
+      reset({ brand: defaultBrand });
+    }
+  }, [open, defaultBrand, reset]);
+
+  const setOpen = (nextOpen: boolean) => {
+    if (isControlled) {
+      onOpenChange?.(nextOpen);
+    } else {
+      setInternalOpen(nextOpen);
+    }
+  };
 
   const onSubmit = async (data: VehicleInput) => {
     setFormError(null);
@@ -77,7 +107,7 @@ export function AddVehicleDialog() {
         }
       }}
     >
-      <DialogTrigger render={<Button>Add Vehicle</Button>} />
+      {!isControlled && <DialogTrigger render={<Button>Add Vehicle</Button>} />}
       <DialogContent className="sm:max-w-2xl">
         <VehiclePhotoPreview control={control} />
 

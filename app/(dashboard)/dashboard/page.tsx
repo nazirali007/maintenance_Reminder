@@ -105,7 +105,8 @@ export default async function DashboardPage() {
               key={vehicle.id}
               className={cn(
                 "animate-in fade-in slide-in-from-bottom-4 transition-shadow duration-500 [animation-fill-mode:both] hover:shadow-lg",
-                index === 0 && "pt-0 lg:col-span-2"
+                index === 0 && "pt-0",
+                index === 0 && vehicles.length > 1 && "lg:col-span-2"
               )}
               style={{ animationDelay: `${150 + index * 120}ms` }}
             >

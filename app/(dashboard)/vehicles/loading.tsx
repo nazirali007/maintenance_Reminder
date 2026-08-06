@@ -7,10 +7,14 @@ function VehicleCardSkeleton() {
       <Skeleton className="aspect-video w-full rounded-none" />
       <CardHeader className="flex items-center gap-3">
         <Skeleton className="size-10 shrink-0 rounded-full" />
-        <Skeleton className="h-5 flex-1" />
+        <Skeleton className="h-5 min-w-0 flex-1" />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Skeleton className="size-7 rounded-md" />
+          <Skeleton className="size-7 rounded-md" />
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-24 rounded-full" />
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-3 w-28" />
       </CardContent>
