@@ -21,8 +21,8 @@ const FUEL_OPTIONS = [
   { value: "PETROL", label: "Petrol" },
   { value: "DIESEL", label: "Diesel" },
   { value: "ELECTRIC", label: "Electric" },
-  { value: "HYBRID", label: "Hybrid" },
-  { value: "CNG", label: "CNG" },
+  { value: "PETROL_HYBRID", label: "Petrol + Hybrid" },
+  { value: "PETROL_CNG", label: "Petrol + CNG" },
 ] as const;
 
 const TRANSMISSION_OPTIONS = [
@@ -60,18 +60,6 @@ export function VehicleFormFields({
         )}
       />
       <FieldError errors={[errors.brand, errors.model]} className="sm:col-span-2" />
-
-      <Field data-invalid={!!errors.variant}>
-        <FieldLabel htmlFor="variant">Variant</FieldLabel>
-        <Input id="variant" placeholder="ZX" {...register("variant")} />
-        <FieldError errors={[errors.variant]} />
-      </Field>
-
-      <Field data-invalid={!!errors.year}>
-        <FieldLabel htmlFor="year">Year</FieldLabel>
-        <Input id="year" type="number" placeholder="2022" {...register("year")} />
-        <FieldError errors={[errors.year]} />
-      </Field>
 
       <Field data-invalid={!!errors.fuelType}>
         <FieldLabel htmlFor="fuelType">Fuel</FieldLabel>
@@ -139,14 +127,6 @@ export function VehicleFormFields({
           {...register("lastServiceMileage")}
         />
         <FieldError errors={[errors.lastServiceMileage]} />
-      </Field>
-
-      <Field data-invalid={!!errors.purchaseDate}>
-        <FieldLabel htmlFor="purchaseDate">
-          Purchase Date <span className="text-muted-foreground">(optional)</span>
-        </FieldLabel>
-        <Input id="purchaseDate" type="date" {...register("purchaseDate")} />
-        <FieldError errors={[errors.purchaseDate]} />
       </Field>
 
       <Field data-invalid={!!errors.lastServiceDate}>

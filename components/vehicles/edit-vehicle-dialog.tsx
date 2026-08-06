@@ -35,14 +35,11 @@ export function EditVehicleDialog({ vehicle }: { vehicle: Vehicle }) {
   const defaultValues: VehicleInput = {
     brand: vehicle.brand,
     model: vehicle.model,
-    variant: vehicle.variant ?? "",
     fuelType: vehicle.fuelType,
     transmission: vehicle.transmission,
-    year: vehicle.year,
     currentMileage: vehicle.currentMileage,
     lastServiceMileage: vehicle.lastServiceMileage,
     lastServiceDate: toDateInputValue(vehicle.lastServiceDate),
-    purchaseDate: toDateInputValue(vehicle.purchaseDate),
   };
 
   const {

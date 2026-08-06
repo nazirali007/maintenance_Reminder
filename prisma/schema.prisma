@@ -93,8 +93,8 @@ enum FuelType {
   PETROL
   DIESEL
   ELECTRIC
-  HYBRID
-  CNG
+  PETROL_HYBRID
+  PETROL_CNG
 }
 
 enum Transmission {

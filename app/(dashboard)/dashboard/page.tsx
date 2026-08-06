@@ -75,7 +75,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-1 flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-none flex-1 flex-col gap-6 p-6">
       <h1 className="animate-in fade-in slide-in-from-top-2 text-xl font-semibold duration-500">
         {greeting}
         {firstName ? `, ${firstName}` : ""} 👋
@@ -85,98 +85,100 @@ export default async function DashboardPage() {
         <BrandMarquee />
       </div>
 
-      {vehicles.map((vehicle, index) => {
-        const healthScore = computeHealthScore(vehicle.maintenanceItems, vehicle.currentMileage);
-        const healthStatus = getHealthScoreStatus(healthScore);
-        const upcomingItems = sortByUrgency(vehicle.maintenanceItems, vehicle.currentMileage, { now });
-        const lastOdometerUpdate = vehicle.odometerLogs[0]?.recordedAt ?? vehicle.updatedAt;
-        const odometerOverdue =
-          daysBetween(lastOdometerUpdate, now) >= ODOMETER_NUDGE_THRESHOLD_DAYS;
-        const odometerLogsForRate =
-          vehicle.odometerLogs.length > 0
-            ? vehicle.odometerLogs
-            : [{ reading: vehicle.currentMileage, recordedAt: vehicle.updatedAt }];
-        const { kmPerDay } = estimateDailyRate(odometerLogsForRate);
-        const serviceDueInfo = getVehicleServiceDueInfo(vehicle, { now, dailyRateKm: kmPerDay });
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {vehicles.map((vehicle, index) => {
+          const healthScore = computeHealthScore(vehicle.maintenanceItems, vehicle.currentMileage);
+          const healthStatus = getHealthScoreStatus(healthScore);
+          const upcomingItems = sortByUrgency(vehicle.maintenanceItems, vehicle.currentMileage, { now });
+          const lastOdometerUpdate = vehicle.odometerLogs[0]?.recordedAt ?? vehicle.updatedAt;
+          const odometerOverdue =
+            daysBetween(lastOdometerUpdate, now) >= ODOMETER_NUDGE_THRESHOLD_DAYS;
+          const odometerLogsForRate =
+            vehicle.odometerLogs.length > 0
+              ? vehicle.odometerLogs
+              : [{ reading: vehicle.currentMileage, recordedAt: vehicle.updatedAt }];
+          const { kmPerDay } = estimateDailyRate(odometerLogsForRate);
+          const serviceDueInfo = getVehicleServiceDueInfo(vehicle, { now, dailyRateKm: kmPerDay });
 
-        return (
-          <Card
-            key={vehicle.id}
-            className={cn(
-              "animate-in fade-in slide-in-from-bottom-4 transition-shadow duration-500 [animation-fill-mode:both] hover:shadow-lg",
-              index === 0 && "pt-0"
-            )}
-            style={{ animationDelay: `${150 + index * 120}ms` }}
-          >
-            {index === 0 ? (
-              <VehicleHero
-                vehicle={vehicle}
-                healthScore={healthScore}
-                healthStatus={healthStatus}
-              />
-            ) : (
-              <>
-                <CarPhoto brand={vehicle.brand} model={vehicle.model} />
-                <CardHeader className="flex items-center gap-3">
-                  <BrandIcon brand={vehicle.brand} size={40} className="shrink-0" />
-                  <CardTitle className="min-w-0 flex-1 truncate">
-                    {vehicle.brand} {vehicle.model}
-                  </CardTitle>
-                  <span
-                    className={cn(
-                      "shrink-0 text-2xl font-semibold transition-transform duration-300 hover:scale-110",
-                      healthStatus === "overdue" && "text-destructive",
-                      healthStatus === "due-soon" && "text-warning",
-                      healthStatus === "ok" && "text-success"
-                    )}
-                  >
-                    {healthScore}%
-                  </span>
-                </CardHeader>
-              </>
-            )}
-            <CardContent className="flex flex-col gap-4">
-              <VehicleServiceAlert dueInfo={serviceDueInfo} />
-
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Upcoming Maintenance</p>
-                <AddMaintenanceItemDialog
-                  vehicleId={vehicle.id}
-                  currentMileage={vehicle.currentMileage}
-                  lastServiceMileage={vehicle.lastServiceMileage}
-                  lastServiceDate={vehicle.lastServiceDate}
-                  trackedItems={vehicle.maintenanceItems}
+          return (
+            <Card
+              key={vehicle.id}
+              className={cn(
+                "animate-in fade-in slide-in-from-bottom-4 transition-shadow duration-500 [animation-fill-mode:both] hover:shadow-lg",
+                index === 0 && "pt-0 lg:col-span-2"
+              )}
+              style={{ animationDelay: `${150 + index * 120}ms` }}
+            >
+              {index === 0 ? (
+                <VehicleHero
+                  vehicle={vehicle}
+                  healthScore={healthScore}
+                  healthStatus={healthStatus}
                 />
-              </div>
+              ) : (
+                <>
+                  <CarPhoto brand={vehicle.brand} model={vehicle.model} />
+                  <CardHeader className="flex items-center gap-3">
+                    <BrandIcon brand={vehicle.brand} size={40} className="shrink-0" />
+                    <CardTitle className="min-w-0 flex-1 truncate">
+                      {vehicle.brand} {vehicle.model}
+                    </CardTitle>
+                    <span
+                      className={cn(
+                        "shrink-0 text-2xl font-semibold transition-transform duration-300 hover:scale-110",
+                        healthStatus === "overdue" && "text-destructive",
+                        healthStatus === "due-soon" && "text-warning",
+                        healthStatus === "ok" && "text-success"
+                      )}
+                    >
+                      {healthScore}%
+                    </span>
+                  </CardHeader>
+                </>
+              )}
+              <CardContent className="flex flex-col gap-4">
+                <VehicleServiceAlert dueInfo={serviceDueInfo} />
 
-              <UpcomingMaintenanceList
-                vehicleId={vehicle.id}
-                items={upcomingItems}
-                currentMileage={vehicle.currentMileage}
-                dailyRateKm={kmPerDay}
-              />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Upcoming Maintenance</p>
+                  <AddMaintenanceItemDialog
+                    vehicleId={vehicle.id}
+                    currentMileage={vehicle.currentMileage}
+                    lastServiceMileage={vehicle.lastServiceMileage}
+                    lastServiceDate={vehicle.lastServiceDate}
+                    trackedItems={vehicle.maintenanceItems}
+                  />
+                </div>
 
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Odometer:{" "}
-                  <span className="font-medium text-foreground">
-                    {vehicle.currentMileage.toLocaleString("en-US")} km
-                  </span>
-                  <span className="text-xs"> · Last service: </span>
-                  <span className="text-xs font-medium text-foreground">
-                    {vehicle.lastServiceMileage.toLocaleString("en-US")} km
-                  </span>
-                </p>
-                <UpdateOdometerButton
+                <UpcomingMaintenanceList
                   vehicleId={vehicle.id}
+                  items={upcomingItems}
                   currentMileage={vehicle.currentMileage}
-                  isOverdue={odometerOverdue}
+                  dailyRateKm={kmPerDay}
                 />
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Odometer:{" "}
+                    <span className="font-medium text-foreground">
+                      {vehicle.currentMileage.toLocaleString("en-US")} km
+                    </span>
+                    <span className="text-xs"> · Last service: </span>
+                    <span className="text-xs font-medium text-foreground">
+                      {vehicle.lastServiceMileage.toLocaleString("en-US")} km
+                    </span>
+                  </p>
+                  <UpdateOdometerButton
+                    vehicleId={vehicle.id}
+                    currentMileage={vehicle.currentMileage}
+                    isOverdue={odometerOverdue}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
