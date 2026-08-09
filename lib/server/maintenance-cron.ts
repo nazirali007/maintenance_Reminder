@@ -131,6 +131,8 @@ export async function runDailyMaintenanceCheck(
 
         queueDueEntry(vehicle.userId, vehicle.user.email, {
           vehicleLabel,
+          vehicleBrand: vehicle.brand,
+          vehicleModel: vehicle.model,
           itemName: item.name,
           reasonKm: kmDue || kmDueSoon,
           reasonDate: dateDue || dateDueSoon,
@@ -189,6 +191,8 @@ export async function runDailyMaintenanceCheck(
 
             queueDueEntry(vehicle.userId, vehicle.user.email, {
               vehicleLabel,
+              vehicleBrand: vehicle.brand,
+              vehicleModel: vehicle.model,
               itemName: "Service",
               reasonKm: vehicleKmDue || vehicleKmDueSoon,
               reasonDate: vehicleDateDue || vehicleDateDueSoon,
@@ -228,6 +232,8 @@ export async function runDailyMaintenanceCheck(
             try {
               await sendOdometerUpdateNudgeEmail(vehicle.user.email, {
                 vehicleLabel,
+                vehicleBrand: vehicle.brand,
+                vehicleModel: vehicle.model,
                 daysSinceLastUpdate: Math.round(daysSinceLog),
               });
               summary.emailsSent += 1;

@@ -1,5 +1,19 @@
 import "server-only";
 import nodemailer from "nodemailer";
+import { getModelImagePath } from "@/lib/car-catalog";
+import { getSiteUrl } from "@/lib/site-url";
+
+function absoluteCarPhotoUrl(brand: string, model: string): string | null {
+  const imagePath = getModelImagePath(brand, model);
+  return imagePath ? `${getSiteUrl()}${imagePath}` : null;
+}
+
+function carPhotoHtml(brand: string, model: string): string {
+  const photoUrl = absoluteCarPhotoUrl(brand, model);
+  if (!photoUrl) return "";
+
+  return `<img src="${photoUrl}" alt="${brand} ${model}" width="480" style="display: block; width: 100%; max-width: 480px; height: auto; border-radius: 12px; margin-bottom: 12px;" />`;
+}
 
 let transporter: nodemailer.Transporter | undefined;
 
@@ -50,6 +64,8 @@ export async function sendOtpEmail(to: string, code: string) {
 
 export interface MaintenanceDueEntry {
   vehicleLabel: string;
+  vehicleBrand: string;
+  vehicleModel: string;
   itemName: string;
   reasonKm: boolean;
   reasonDate: boolean;
@@ -60,7 +76,8 @@ export interface MaintenanceDueEntry {
  * One email per run per user summarizing every item that just became due —
  * across all their vehicles — instead of a separate email per item. A user
  * tracking 5 maintenance items that all cross their threshold on the same
- * day gets a single digest, not 5 emails.
+ * day gets a single digest, not 5 emails. Grouped by vehicle so each car's
+ * photo shows once, above its own list of due items.
  */
 export async function sendMaintenanceDueSummaryEmail(
   to: string,
@@ -76,22 +93,46 @@ export async function sendMaintenanceDueSummaryEmail(
         ? `${entries.length} maintenance items may be due`
         : `${entries.length} maintenance items due soon`;
 
-  const rows = entries
-    .map((e) => {
-      const verb = e.dueSoon ? "will be due soon" : "may be due";
-      const reasons = [
-        e.reasonKm &&
-          (e.dueSoon
-            ? "estimated mileage is approaching its service interval"
-            : "estimated mileage has crossed its service interval"),
-        e.reasonDate &&
-          (e.dueSoon
-            ? "it's almost been a year since it was last serviced"
-            : "it's been over a year since it was last serviced"),
-      ]
-        .filter(Boolean)
-        .join(" and ");
-      return `<li><strong>${e.vehicleLabel}</strong> — <strong>${e.itemName}</strong> ${verb} (${reasons}).</li>`;
+  const vehicleGroups = new Map<string, MaintenanceDueEntry[]>();
+  for (const entry of entries) {
+    const group = vehicleGroups.get(entry.vehicleLabel);
+    if (group) {
+      group.push(entry);
+    } else {
+      vehicleGroups.set(entry.vehicleLabel, [entry]);
+    }
+  }
+
+  const sections = [...vehicleGroups.entries()]
+    .map(([vehicleLabel, vehicleEntries]) => {
+      const items = vehicleEntries
+        .map((e) => {
+          const verb = e.dueSoon ? "will be due soon" : "may be due";
+          const reasons = [
+            e.reasonKm &&
+              (e.dueSoon
+                ? "estimated mileage is approaching its service interval"
+                : "estimated mileage has crossed its service interval"),
+            e.reasonDate &&
+              (e.dueSoon
+                ? "it's almost been a year since it was last serviced"
+                : "it's been over a year since it was last serviced"),
+          ]
+            .filter(Boolean)
+            .join(" and ");
+          return `<li><strong>${e.itemName}</strong> ${verb} (${reasons}).</li>`;
+        })
+        .join("");
+
+      const { vehicleBrand, vehicleModel } = vehicleEntries[0];
+
+      return `
+        <div style="margin-bottom: 24px;">
+          ${carPhotoHtml(vehicleBrand, vehicleModel)}
+          <p style="font-weight: 600; margin: 0 0 4px;">${vehicleLabel}</p>
+          <ul style="margin: 0;">${items}</ul>
+        </div>
+      `;
     })
     .join("");
 
@@ -100,7 +141,7 @@ export async function sendMaintenanceDueSummaryEmail(
     subject,
     `
       <p>The following ${entries.length === 1 ? "item needs" : "items need"} attention:</p>
-      <ul>${rows}</ul>
+      ${sections}
       <p>These are estimates projected from your last recorded odometer reading — not confirmed readings.</p>
       <p>Please open the app and update your current odometer to confirm.</p>
     `
@@ -109,14 +150,20 @@ export async function sendMaintenanceDueSummaryEmail(
 
 export async function sendOdometerUpdateNudgeEmail(
   to: string,
-  params: { vehicleLabel: string; daysSinceLastUpdate: number }
+  params: {
+    vehicleLabel: string;
+    vehicleBrand: string;
+    vehicleModel: string;
+    daysSinceLastUpdate: number;
+  }
 ) {
-  const { vehicleLabel, daysSinceLastUpdate } = params;
+  const { vehicleLabel, vehicleBrand, vehicleModel, daysSinceLastUpdate } = params;
 
   await sendMail(
     to,
     `Update your odometer for ${vehicleLabel}`,
     `
+      ${carPhotoHtml(vehicleBrand, vehicleModel)}
       <p>It's been ${daysSinceLastUpdate} days since you last updated the odometer for <strong>${vehicleLabel}</strong>.</p>
       <p>Keeping it current helps us give you accurate, timely service reminders.</p>
       <p>Open the app and update your current odometer reading when you get a chance.</p>
