@@ -1,7 +1,7 @@
 import { after } from "next/server";
 
 import { auth } from "@/auth";
-import { syncOverdueNotifications, getUnreadNotifications } from "@/lib/server/notifications";
+import { checkAndNotifyDueMaintenance, getUnreadNotifications } from "@/lib/server/notifications";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -20,7 +20,7 @@ export default async function DashboardGroupLayout({
     // writes) runs after the response is sent so it never adds latency to
     // the page load. Any newly-overdue item shows up on the next visit.
     notifications = await getUnreadNotifications(userId);
-    after(() => syncOverdueNotifications(userId));
+    after(() => checkAndNotifyDueMaintenance(userId));
   }
 
   return (

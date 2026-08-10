@@ -26,6 +26,10 @@ export interface MaintenanceDueInfo {
   label: string;
   /** Projected calendar date this item will be due, from the driving-rate estimate. Display-only. */
   estimatedDueDate: Date | null;
+  /** Whether mileage is a contributing reason for the current status (due-soon or overdue). */
+  reasonKm: boolean;
+  /** Whether the 1-year anniversary is a contributing reason for the current status. */
+  reasonDate: boolean;
 }
 
 function computeDueInfo(
@@ -72,7 +76,16 @@ function computeDueInfo(
       ? `Due in ${remainingDays} ${remainingDays === 1 ? "day" : "days"}`
       : `Due in ${remainingKm.toLocaleString("en-US")} km`;
 
-  return { remainingKm, remainingDays, isOverdue, status, label, estimatedDueDate };
+  return {
+    remainingKm,
+    remainingDays,
+    isOverdue,
+    status,
+    label,
+    estimatedDueDate,
+    reasonKm: kmOverdue || kmDueSoon,
+    reasonDate: dateOverdue || dateDueSoon,
+  };
 }
 
 export function getMaintenanceDueInfo(

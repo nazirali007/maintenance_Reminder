@@ -1,7 +1,10 @@
+import { after } from "next/server";
+
 import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { odometerUpdateSchema } from "@/lib/validations/vehicle";
 import { enforceRateLimit } from "@/lib/server/rate-limit";
+import { checkAndNotifyDueMaintenance } from "@/lib/server/notifications";
 
 const WRITE_RATE_LIMIT = 20;
 const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
@@ -66,6 +69,11 @@ export async function POST(
   await prisma.odometerLog.create({
     data: { vehicleId: vehicle.id, reading },
   });
+
+  // Runs after the response is sent so it never adds latency to the save —
+  // this is what makes the reminder feel instant instead of waiting for the
+  // next daily cron run.
+  after(() => checkAndNotifyDueMaintenance(userId, [vehicleId]));
 
   return Response.json({ vehicle });
 }

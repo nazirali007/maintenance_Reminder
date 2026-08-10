@@ -70,6 +70,8 @@ export interface MaintenanceDueEntry {
   reasonKm: boolean;
   reasonDate: boolean;
   dueSoon: boolean;
+  /** True for the daily cron's driving-rate projection; false when triggered right after a real odometer reading. */
+  isEstimated: boolean;
 }
 
 /**
@@ -136,14 +138,19 @@ export async function sendMaintenanceDueSummaryEmail(
     })
     .join("");
 
+  const anyEstimated = entries.some((e) => e.isEstimated);
+  const caveat = anyEstimated
+    ? "<p>Some of these are estimates projected from your last recorded odometer reading — not confirmed readings. Please open the app and update your current odometer to confirm.</p>"
+    : "";
+
   await sendMail(
     to,
     subject,
     `
       <p>The following ${entries.length === 1 ? "item needs" : "items need"} attention:</p>
       ${sections}
-      <p>These are estimates projected from your last recorded odometer reading — not confirmed readings.</p>
-      <p>Please open the app and update your current odometer to confirm.</p>
+      ${caveat}
+      <p>Already had this done? Update the vehicle's last service details in the app to clear this reminder.</p>
     `
   );
 }

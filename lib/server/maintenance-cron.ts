@@ -5,12 +5,7 @@ import {
   ODOMETER_NUDGE_THRESHOLD_DAYS,
   type OdometerLogLike,
 } from "@/lib/odometer-projection";
-import {
-  DUE_SOON_KM_THRESHOLD,
-  DUE_SOON_DAYS,
-  VEHICLE_SERVICE_INTERVAL_KM,
-  VEHICLE_SERVICE_DUE_SOON_KM,
-} from "@/lib/maintenance";
+import { getMaintenanceDueInfo, getVehicleServiceDueInfo } from "@/lib/maintenance";
 import {
   sendMaintenanceDueSummaryEmail,
   sendOdometerUpdateNudgeEmail,
@@ -20,7 +15,6 @@ import {
 const RENOTIFY_WINDOW_DAYS = 7;
 const NUDGE_THRESHOLD_DAYS = ODOMETER_NUDGE_THRESHOLD_DAYS;
 const NUDGE_WINDOW_DAYS = ODOMETER_NUDGE_THRESHOLD_DAYS;
-const ONE_YEAR_DAYS = 365;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export interface CronSummary {
@@ -85,20 +79,9 @@ export async function runDailyMaintenanceCheck(
       const vehicleLabel = `${vehicle.brand} ${vehicle.model}`;
 
       for (const item of vehicle.maintenanceItems) {
-        const remainingKm = item.lastServiceMileage + item.intervalKm - estimatedMileage;
-        const kmDue = remainingKm <= 0;
-        const kmDueSoon = !kmDue && remainingKm <= DUE_SOON_KM_THRESHOLD;
-
-        const daysSinceService =
-          item.lastServiceDate != null ? daysSince(item.lastServiceDate, now) : null;
-        const dateDue = daysSinceService != null && daysSinceService >= ONE_YEAR_DAYS;
-        const dateDueSoon =
-          !dateDue &&
-          daysSinceService != null &&
-          daysSinceService >= ONE_YEAR_DAYS - DUE_SOON_DAYS;
-
-        const isDue = kmDue || dateDue;
-        const isDueSoon = !isDue && (kmDueSoon || dateDueSoon);
+        const dueInfo = getMaintenanceDueInfo(item, estimatedMileage, { now });
+        const isDue = dueInfo.status === "overdue";
+        const isDueSoon = dueInfo.status === "due-soon";
 
         if (!isDue && !isDueSoon) continue;
 
@@ -134,33 +117,21 @@ export async function runDailyMaintenanceCheck(
           vehicleBrand: vehicle.brand,
           vehicleModel: vehicle.model,
           itemName: item.name,
-          reasonKm: kmDue || kmDueSoon,
-          reasonDate: dateDue || dateDueSoon,
+          reasonKm: dueInfo.reasonKm,
+          reasonDate: dueInfo.reasonDate,
           dueSoon: isDueSoon,
+          isEstimated: true,
         });
       }
 
       // The blanket whole-car rule, separate from per-item tracking above:
       // 10,000km or 1 year since the car itself was last serviced.
-      const vehicleRemainingKm =
-        vehicle.lastServiceMileage + VEHICLE_SERVICE_INTERVAL_KM - estimatedMileage;
-      const vehicleKmDue = vehicleRemainingKm <= 0;
-      const vehicleKmDueSoon =
-        !vehicleKmDue && vehicleRemainingKm <= VEHICLE_SERVICE_DUE_SOON_KM;
-
-      const daysSinceVehicleService =
-        vehicle.lastServiceDate != null
-          ? daysSince(vehicle.lastServiceDate, now)
-          : null;
-      const vehicleDateDue =
-        daysSinceVehicleService != null && daysSinceVehicleService >= ONE_YEAR_DAYS;
-      const vehicleDateDueSoon =
-        !vehicleDateDue &&
-        daysSinceVehicleService != null &&
-        daysSinceVehicleService >= ONE_YEAR_DAYS - DUE_SOON_DAYS;
-
-      const vehicleIsDue = vehicleKmDue || vehicleDateDue;
-      const vehicleIsDueSoon = !vehicleIsDue && (vehicleKmDueSoon || vehicleDateDueSoon);
+      const vehicleDueInfo = getVehicleServiceDueInfo(
+        { ...vehicle, currentMileage: estimatedMileage },
+        { now }
+      );
+      const vehicleIsDue = vehicleDueInfo.status === "overdue";
+      const vehicleIsDueSoon = vehicleDueInfo.status === "due-soon";
 
       if (vehicleIsDue || vehicleIsDueSoon) {
         const recentWindow = new Date(now.getTime() - RENOTIFY_WINDOW_DAYS * MS_PER_DAY);
@@ -194,9 +165,10 @@ export async function runDailyMaintenanceCheck(
               vehicleBrand: vehicle.brand,
               vehicleModel: vehicle.model,
               itemName: "Service",
-              reasonKm: vehicleKmDue || vehicleKmDueSoon,
-              reasonDate: vehicleDateDue || vehicleDateDueSoon,
+              reasonKm: vehicleDueInfo.reasonKm,
+              reasonDate: vehicleDueInfo.reasonDate,
               dueSoon: vehicleIsDueSoon,
+              isEstimated: true,
             });
           }
         }
