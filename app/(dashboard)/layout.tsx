@@ -5,6 +5,7 @@ import { checkAndNotifyDueMaintenance, getUnreadNotifications } from "@/lib/serv
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ChatWidget } from "@/components/chat/chat-widget";
 
 export default async function DashboardGroupLayout({
   children,
@@ -38,6 +39,7 @@ export default async function DashboardGroupLayout({
         <main className="flex min-w-0 flex-1 flex-col">{children}</main>
         <Footer />
       </div>
+      <ChatWidget />
     </div>
   );
 }

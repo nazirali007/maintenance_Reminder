@@ -43,6 +43,8 @@ every part yourself.
 - A daily background job that estimates today's odometer reading from your
   driving history and emails you if a service is likely due — even if you
   haven't opened the app in weeks
+- A Gemini-powered chat widget scoped to car/vehicle questions, with
+  context on the signed-in user's own vehicles and maintenance status
 
 ## Tech stack
 
@@ -50,6 +52,7 @@ every part yourself.
 - [Prisma](https://www.prisma.io) + PostgreSQL (developed against [Supabase](https://supabase.com))
 - [Auth.js](https://authjs.dev) (Google OAuth, credentials, email OTP)
 - [Resend](https://resend.com) for transactional email
+- [Gemini API](https://ai.google.dev) (`@google/genai`) for the car-assistant chat widget
 - Tailwind CSS v4 + shadcn/ui (base-ui primitives) + `react-hook-form` + `zod`
 
 ## Getting started
@@ -72,6 +75,7 @@ See `.env.example` for the full list and where to get each value. In short, you'
 - Google OAuth credentials (`AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`)
 - A [Resend](https://resend.com) API key (`RESEND_API_KEY`, `EMAIL_FROM`) for OTP/password-reset/reminder emails
 - `CRON_SECRET` — generate the same way as `AUTH_SECRET`; protects the daily reminder job
+- A [Gemini API key](https://aistudio.google.com/apikey) (`GEMINI_API_KEY`) for the chat widget
 
 ### The daily reminder job
 

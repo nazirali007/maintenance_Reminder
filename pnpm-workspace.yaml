@@ -1,5 +1,7 @@
 allowBuilds:
+  '@google/genai': false
   '@prisma/engines': true
   prisma: true
+  protobufjs: false
   sharp: false
   unrs-resolver: false
