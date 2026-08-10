@@ -1,18 +1,43 @@
 import "server-only";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import nodemailer from "nodemailer";
 import { getModelImagePath } from "@/lib/car-catalog";
-import { getSiteUrl } from "@/lib/site-url";
 
-function absoluteCarPhotoUrl(brand: string, model: string): string | null {
-  const imagePath = getModelImagePath(brand, model);
-  return imagePath ? `${getSiteUrl()}${imagePath}` : null;
+interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  cid: string;
 }
 
-function carPhotoHtml(brand: string, model: string): string {
-  const photoUrl = absoluteCarPhotoUrl(brand, model);
-  if (!photoUrl) return "";
+/**
+ * Embeds the car photo directly in the email (CID inline attachment) rather
+ * than linking to a URL on our server. A linked URL either points at
+ * localhost in dev (unreachable by any real mail client) or, even once
+ * deployed, gets silently blocked by the "don't load remote images"
+ * default most mail clients (Gmail, Outlook) ship with.
+ */
+async function loadCarPhotoAttachment(
+  brand: string,
+  model: string,
+  cid: string
+): Promise<EmailAttachment | null> {
+  const imagePath = getModelImagePath(brand, model);
+  if (!imagePath) return null;
 
-  return `<img src="${photoUrl}" alt="${brand} ${model}" width="480" style="display: block; width: 100%; max-width: 480px; height: auto; border-radius: 12px; margin-bottom: 12px;" />`;
+  const relativePath = decodeURIComponent(imagePath.replace(/^\//, ""));
+  const absolutePath = path.join(process.cwd(), "public", relativePath);
+
+  try {
+    const content = await readFile(absolutePath);
+    return { filename: path.basename(absolutePath), content, cid };
+  } catch {
+    return null;
+  }
+}
+
+function carPhotoHtml(cid: string, brand: string, model: string): string {
+  return `<img src="cid:${cid}" alt="${brand} ${model}" width="480" style="display: block; width: 100%; max-width: 480px; height: auto; border-radius: 12px; margin-bottom: 12px;" />`;
 }
 
 let transporter: nodemailer.Transporter | undefined;
@@ -29,12 +54,18 @@ function getTransporter() {
   }));
 }
 
-async function sendMail(to: string, subject: string, html: string) {
+async function sendMail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments: EmailAttachment[] = []
+) {
   await getTransporter().sendMail({
     from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
     to,
     subject,
     html,
+    attachments,
   });
 }
 
@@ -105,8 +136,10 @@ export async function sendMaintenanceDueSummaryEmail(
     }
   }
 
-  const sections = [...vehicleGroups.entries()]
-    .map(([vehicleLabel, vehicleEntries]) => {
+  const attachments: EmailAttachment[] = [];
+
+  const sections = await Promise.all(
+    [...vehicleGroups.entries()].map(async ([vehicleLabel, vehicleEntries], index) => {
       const items = vehicleEntries
         .map((e) => {
           const verb = e.dueSoon ? "will be due soon" : "may be due";
@@ -127,16 +160,19 @@ export async function sendMaintenanceDueSummaryEmail(
         .join("");
 
       const { vehicleBrand, vehicleModel } = vehicleEntries[0];
+      const cid = `car-photo-${index}`;
+      const attachment = await loadCarPhotoAttachment(vehicleBrand, vehicleModel, cid);
+      if (attachment) attachments.push(attachment);
 
       return `
         <div style="margin-bottom: 24px;">
-          ${carPhotoHtml(vehicleBrand, vehicleModel)}
+          ${attachment ? carPhotoHtml(cid, vehicleBrand, vehicleModel) : ""}
           <p style="font-weight: 600; margin: 0 0 4px;">${vehicleLabel}</p>
           <ul style="margin: 0;">${items}</ul>
         </div>
       `;
     })
-    .join("");
+  );
 
   const anyEstimated = entries.some((e) => e.isEstimated);
   const caveat = anyEstimated
@@ -148,10 +184,11 @@ export async function sendMaintenanceDueSummaryEmail(
     subject,
     `
       <p>The following ${entries.length === 1 ? "item needs" : "items need"} attention:</p>
-      ${sections}
+      ${sections.join("")}
       ${caveat}
       <p>Already had this done? Update the vehicle's last service details in the app to clear this reminder.</p>
-    `
+    `,
+    attachments
   );
 }
 
@@ -166,14 +203,18 @@ export async function sendOdometerUpdateNudgeEmail(
 ) {
   const { vehicleLabel, vehicleBrand, vehicleModel, daysSinceLastUpdate } = params;
 
+  const cid = "car-photo";
+  const attachment = await loadCarPhotoAttachment(vehicleBrand, vehicleModel, cid);
+
   await sendMail(
     to,
     `Update your odometer for ${vehicleLabel}`,
     `
-      ${carPhotoHtml(vehicleBrand, vehicleModel)}
+      ${attachment ? carPhotoHtml(cid, vehicleBrand, vehicleModel) : ""}
       <p>It's been ${daysSinceLastUpdate} days since you last updated the odometer for <strong>${vehicleLabel}</strong>.</p>
       <p>Keeping it current helps us give you accurate, timely service reminders.</p>
       <p>Open the app and update your current odometer reading when you get a chance.</p>
-    `
+    `,
+    attachment ? [attachment] : []
   );
 }

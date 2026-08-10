@@ -45,6 +45,7 @@ export async function generateChatReply(params: {
   message: string;
   history: ChatTurn[];
   vehicleContext: string;
+  userName?: string | null;
 }): Promise<string> {
   const ai = getClient();
 
@@ -56,11 +57,17 @@ export async function generateChatReply(params: {
     { role: "user" as const, parts: [{ text: params.message }] },
   ];
 
+  const nameInstruction = params.userName
+    ? `The signed-in user's first name is "${params.userName}" — greet them by name (e.g. "Hello ${params.userName}!") and use it naturally where it fits, but don't force it into every message.`
+    : "";
+
   const response = await ai.models.generateContent({
     model: MODEL,
     contents,
     config: {
-      systemInstruction: `${BASE_SYSTEM_INSTRUCTION}\n\n${params.vehicleContext}`,
+      systemInstruction: [BASE_SYSTEM_INSTRUCTION, nameInstruction, params.vehicleContext]
+        .filter(Boolean)
+        .join("\n\n"),
     },
   });
 

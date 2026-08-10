@@ -63,16 +63,18 @@ export async function POST(request: Request) {
 
   const { message, history = [] } = parsed.data;
 
-  const vehicles = await prisma.vehicle.findMany({
-    where: { userId },
-    include: { maintenanceItems: true },
-  });
+  const [user, vehicles] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+    prisma.vehicle.findMany({ where: { userId }, include: { maintenanceItems: true } }),
+  ]);
+  const firstName = user?.name?.trim().split(" ")[0];
 
   try {
     const reply = await generateChatReply({
       message,
       history,
       vehicleContext: buildVehicleContext(vehicles),
+      userName: firstName,
     });
 
     return Response.json({ reply });
