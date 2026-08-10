@@ -187,8 +187,14 @@ model Notification {
   // Matches `getUnreadNotifications`'s where clause exactly.
   @@index([userId, status])
   // Matches the OVERDUE/ESTIMATED_OVERDUE dedup lookups in
-  // syncOverdueNotifications and runDailyMaintenanceCheck.
+  // checkAndNotifyDueMaintenance and runDailyMaintenanceCheck.
   @@index([maintenanceItemId, type])
   // Matches the ODOMETER_UPDATE_NUDGE dedup lookup.
   @@index([vehicleId, type])
+  // Two partial unique indexes also exist on this table (migration
+  // 20260810000000_notification_unread_uniqueness, not expressible in this
+  // schema language): one unread notification per (maintenanceItemId, type)
+  // and one per (vehicleId, type) when maintenanceItemId is null. They make
+  // checkAndNotifyDueMaintenance's createManyAndReturn+skipDuplicates safe
+  // against concurrent callers racing the same dedup check.
 }

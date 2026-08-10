@@ -7,6 +7,13 @@ import type { NotificationType, Prisma } from "@/lib/generated/prisma/client";
 const ALREADY_SERVICED_HINT =
   " Already had this done? Update the vehicle's last service details in the app to clear this reminder.";
 
+interface Candidate {
+  notification: Prisma.NotificationCreateManyInput;
+  emailEntry: MaintenanceDueEntry;
+  /** Matches the partial unique indexes from the notification_unread_uniqueness migration. */
+  dedupKey: string;
+}
+
 /**
  * Checks a user's vehicles against their REAL current mileage/last-service
  * data (as opposed to the daily cron's estimated-from-driving-rate check)
@@ -18,7 +25,12 @@ const ALREADY_SERVICED_HINT =
  * Skips anything that already has an unread notification of the matching
  * type, so this can be called freely without spamming duplicates: once the
  * user reads (or the item stops being due) a reminder clears, the next
- * check surfaces a fresh one only if it's still relevant.
+ * check surfaces a fresh one only if it's still relevant. The in-app-check
+ * (existing unread?) is only a fast path — two callers can race it (e.g. an
+ * odometer update's own check and the dashboard reload it triggers), so the
+ * actual dedup guarantee comes from a DB-level partial unique index; we use
+ * `createManyAndReturn` + `skipDuplicates` and only email for the rows that
+ * really got inserted, never for ones silently dropped as duplicates.
  */
 export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: string[]) {
   const vehicles = await prisma.vehicle.findMany({
@@ -44,8 +56,7 @@ export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: 
     .map((vehicle) => ({ vehicle, dueInfo: getVehicleServiceDueInfo(vehicle, { now }) }))
     .filter(({ dueInfo }) => dueInfo.status !== "ok");
 
-  const notificationsToCreate: Prisma.NotificationCreateManyInput[] = [];
-  const emailEntries: MaintenanceDueEntry[] = [];
+  const candidates: Candidate[] = [];
 
   if (dueItems.length > 0) {
     const existing = await prisma.notification.findMany({
@@ -56,33 +67,36 @@ export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: 
       },
       select: { maintenanceItemId: true, type: true },
     });
-    const alreadyNotified = new Set(existing.map((n) => `${n.maintenanceItemId}:${n.type}`));
+    const alreadyNotified = new Set(existing.map((n) => `item:${n.maintenanceItemId}:${n.type}`));
 
     for (const { item, vehicle, dueInfo } of dueItems) {
       const type: NotificationType = dueInfo.status === "overdue" ? "OVERDUE" : "DUE_SOON";
-      if (alreadyNotified.has(`${item.id}:${type}`)) continue;
+      const dedupKey = `item:${item.id}:${type}`;
+      if (alreadyNotified.has(dedupKey)) continue;
 
       const vehicleLabel = `${vehicle.brand} ${vehicle.model}`;
       const verb = type === "OVERDUE" ? "is overdue" : "will be due soon";
 
-      notificationsToCreate.push({
-        userId,
-        vehicleId: vehicle.id,
-        maintenanceItemId: item.id,
-        type,
-        title: type === "OVERDUE" ? `${item.name} is overdue` : `${item.name} due soon`,
-        message: `${vehicleLabel} — ${item.name} ${verb}.${ALREADY_SERVICED_HINT}`,
-      });
-
-      emailEntries.push({
-        vehicleLabel,
-        vehicleBrand: vehicle.brand,
-        vehicleModel: vehicle.model,
-        itemName: item.name,
-        reasonKm: dueInfo.reasonKm,
-        reasonDate: dueInfo.reasonDate,
-        dueSoon: type === "DUE_SOON",
-        isEstimated: false,
+      candidates.push({
+        dedupKey,
+        notification: {
+          userId,
+          vehicleId: vehicle.id,
+          maintenanceItemId: item.id,
+          type,
+          title: type === "OVERDUE" ? `${item.name} is overdue` : `${item.name} due soon`,
+          message: `${vehicleLabel} — ${item.name} ${verb}.${ALREADY_SERVICED_HINT}`,
+        },
+        emailEntry: {
+          vehicleLabel,
+          vehicleBrand: vehicle.brand,
+          vehicleModel: vehicle.model,
+          itemName: item.name,
+          reasonKm: dueInfo.reasonKm,
+          reasonDate: dueInfo.reasonDate,
+          dueSoon: type === "DUE_SOON",
+          isEstimated: false,
+        },
       });
     }
   }
@@ -97,11 +111,12 @@ export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: 
       },
       select: { vehicleId: true, type: true },
     });
-    const alreadyNotified = new Set(existing.map((n) => `${n.vehicleId}:${n.type}`));
+    const alreadyNotified = new Set(existing.map((n) => `vehicle:${n.vehicleId}:${n.type}`));
 
     for (const { vehicle, dueInfo } of dueVehicles) {
       const type: NotificationType = dueInfo.status === "overdue" ? "OVERDUE" : "DUE_SOON";
-      if (alreadyNotified.has(`${vehicle.id}:${type}`)) continue;
+      const dedupKey = `vehicle:${vehicle.id}:${type}`;
+      if (alreadyNotified.has(dedupKey)) continue;
 
       const vehicleLabel = `${vehicle.brand} ${vehicle.model}`;
       const verb =
@@ -109,30 +124,47 @@ export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: 
           ? "is overdue for its 10,000 km / annual service"
           : "will be due soon for its 10,000 km / annual service";
 
-      notificationsToCreate.push({
-        userId,
-        vehicleId: vehicle.id,
-        type,
-        title: type === "OVERDUE" ? "Service overdue" : "Service due soon",
-        message: `${vehicleLabel} ${verb}.${ALREADY_SERVICED_HINT}`,
-      });
-
-      emailEntries.push({
-        vehicleLabel,
-        vehicleBrand: vehicle.brand,
-        vehicleModel: vehicle.model,
-        itemName: "Service",
-        reasonKm: dueInfo.reasonKm,
-        reasonDate: dueInfo.reasonDate,
-        dueSoon: type === "DUE_SOON",
-        isEstimated: false,
+      candidates.push({
+        dedupKey,
+        notification: {
+          userId,
+          vehicleId: vehicle.id,
+          type,
+          title: type === "OVERDUE" ? "Service overdue" : "Service due soon",
+          message: `${vehicleLabel} ${verb}.${ALREADY_SERVICED_HINT}`,
+        },
+        emailEntry: {
+          vehicleLabel,
+          vehicleBrand: vehicle.brand,
+          vehicleModel: vehicle.model,
+          itemName: "Service",
+          reasonKm: dueInfo.reasonKm,
+          reasonDate: dueInfo.reasonDate,
+          dueSoon: type === "DUE_SOON",
+          isEstimated: false,
+        },
       });
     }
   }
 
-  if (notificationsToCreate.length === 0) return;
+  if (candidates.length === 0) return;
 
-  await prisma.notification.createMany({ data: notificationsToCreate });
+  const created = await prisma.notification.createManyAndReturn({
+    data: candidates.map((c) => c.notification),
+    skipDuplicates: true,
+    select: { maintenanceItemId: true, vehicleId: true, type: true },
+  });
+  const createdKeys = new Set(
+    created.map((n) =>
+      n.maintenanceItemId ? `item:${n.maintenanceItemId}:${n.type}` : `vehicle:${n.vehicleId}:${n.type}`
+    )
+  );
+
+  const emailEntries = candidates
+    .filter((c) => createdKeys.has(c.dedupKey))
+    .map((c) => c.emailEntry);
+
+  if (emailEntries.length === 0) return;
 
   try {
     await sendMaintenanceDueSummaryEmail(vehicles[0].user.email, emailEntries);
