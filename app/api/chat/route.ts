@@ -4,6 +4,7 @@ import { enforceRateLimit } from "@/lib/server/rate-limit";
 import { chatRequestSchema } from "@/lib/validations/chat";
 import { generateChatReply } from "@/lib/server/gemini";
 import { getMaintenanceDueInfo, getVehicleServiceDueInfo } from "@/lib/maintenance";
+import { withApiErrorHandling } from "@/lib/server/api-error";
 import type { Vehicle, MaintenanceItem } from "@/lib/generated/prisma/client";
 
 const RATE_LIMIT = 20;
@@ -45,44 +46,46 @@ function buildVehicleContext(
 }
 
 export async function POST(request: Request) {
-  const userId = await requireUserId();
-  if (!userId) return unauthorizedResponse();
+  return withApiErrorHandling(async () => {
+    const userId = await requireUserId();
+    if (!userId) return unauthorizedResponse();
 
-  const limited = await enforceRateLimit(`chat:${userId}`, RATE_LIMIT, RATE_WINDOW_MS);
-  if (limited) return limited;
+    const limited = await enforceRateLimit(`chat:${userId}`, RATE_LIMIT, RATE_WINDOW_MS);
+    if (limited) return limited;
 
-  const body = await request.json();
-  const parsed = chatRequestSchema.safeParse(body);
+    const body = await request.json();
+    const parsed = chatRequestSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return Response.json(
-      { error: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+    if (!parsed.success) {
+      return Response.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-  const { message, history = [] } = parsed.data;
+    const { message, history = [] } = parsed.data;
 
-  const [user, vehicles] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
-    prisma.vehicle.findMany({ where: { userId }, include: { maintenanceItems: true } }),
-  ]);
-  const firstName = user?.name?.trim().split(" ")[0];
+    const [user, vehicles] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+      prisma.vehicle.findMany({ where: { userId }, include: { maintenanceItems: true } }),
+    ]);
+    const firstName = user?.name?.trim().split(" ")[0];
 
-  try {
-    const reply = await generateChatReply({
-      message,
-      history,
-      vehicleContext: buildVehicleContext(vehicles),
-      userName: firstName,
-    });
+    try {
+      const reply = await generateChatReply({
+        message,
+        history,
+        vehicleContext: buildVehicleContext(vehicles),
+        userName: firstName,
+      });
 
-    return Response.json({ reply });
-  } catch (err) {
-    console.error("Chat generation failed:", err);
-    return Response.json(
-      { error: "Something went wrong talking to the assistant. Please try again." },
-      { status: 502 }
-    );
-  }
+      return Response.json({ reply });
+    } catch (err) {
+      console.error("Chat generation failed:", err);
+      return Response.json(
+        { error: "Something went wrong talking to the assistant. Please try again." },
+        { status: 502 }
+      );
+    }
+  });
 }

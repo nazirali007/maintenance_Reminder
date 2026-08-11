@@ -2,49 +2,52 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/server/prisma";
 import { registerSchema } from "@/lib/validations/auth";
 import { enforceRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { withApiErrorHandling } from "@/lib/server/api-error";
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(request: Request) {
-  const limited = await enforceRateLimit(
-    `register:${getClientIp(request)}`,
-    RATE_LIMIT,
-    RATE_WINDOW_MS
-  );
-  if (limited) return limited;
-
-  const body = await request.json();
-  const parsed = registerSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return Response.json(
-      { error: parsed.error.flatten().fieldErrors },
-      { status: 400 }
+  return withApiErrorHandling(async () => {
+    const limited = await enforceRateLimit(
+      `register:${getClientIp(request)}`,
+      RATE_LIMIT,
+      RATE_WINDOW_MS
     );
-  }
+    if (limited) return limited;
 
-  const { name, email, phone, password } = parsed.data;
+    const body = await request.json();
+    const parsed = registerSchema.safeParse(body);
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
-    return Response.json(
-      { error: { email: ["An account with this email already exists"] } },
-      { status: 409 }
-    );
-  }
+    if (!parsed.success) {
+      return Response.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-  const hashedPassword = await bcrypt.hash(password, 12);
+    const { name, email, phone, password } = parsed.data;
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      phone: phone || null,
-      password: hashedPassword,
-    },
-    select: { id: true, name: true, email: true },
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return Response.json(
+        { error: { email: ["An account with this email already exists"] } },
+        { status: 409 }
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        phone: phone || null,
+        password: hashedPassword,
+      },
+      select: { id: true, name: true, email: true },
+    });
+
+    return Response.json({ user }, { status: 201 });
   });
-
-  return Response.json({ user }, { status: 201 });
 }

@@ -43,14 +43,26 @@ export async function checkRateLimit(
 /**
  * Convenience wrapper for the common "check the limit, bail out with a 429
  * if it's exceeded" pattern used at the top of route handlers.
+ *
+ * Fails open on error: this runs on every API request (including from
+ * proxy.ts, ahead of every route), so a transient DB hiccup here — e.g. a
+ * pooler blip under Supabase's transaction-mode connection pooling, which
+ * can intermittently reject a raw parameterized query — must not crash the
+ * whole request. Abuse-prevention is worth degrading gracefully for; taking
+ * down every route because the rate limiter itself failed is not.
  */
 export async function enforceRateLimit(
   key: string,
   limit: number,
   windowMs: number
 ): Promise<Response | null> {
-  const { allowed } = await checkRateLimit(key, limit, windowMs);
-  return allowed ? null : rateLimitedResponse();
+  try {
+    const { allowed } = await checkRateLimit(key, limit, windowMs);
+    return allowed ? null : rateLimitedResponse();
+  } catch (err) {
+    console.error("Rate limit check failed — failing open:", err);
+    return null;
+  }
 }
 
 /**

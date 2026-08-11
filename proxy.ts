@@ -28,42 +28,52 @@ function matchesPath(paths: string[], pathname: string) {
 }
 
 export default auth(async (req) => {
-  const { nextUrl } = req;
-  const { pathname } = nextUrl;
+  // Every page and API request passes through here, so a thrown error would
+  // break the entire app rather than one route — fail open (let the request
+  // through) instead. enforceRateLimit already fails open internally; this
+  // is a second layer for anything else in this function (redirect URL
+  // construction, req.auth access, etc.).
+  try {
+    const { nextUrl } = req;
+    const { pathname } = nextUrl;
 
-  if (pathname.startsWith("/api")) {
-    const limited = await enforceRateLimit(
-      `api:${getClientIp(req)}`,
-      API_RATE_LIMIT,
-      API_RATE_WINDOW_MS
-    );
-    return limited ?? NextResponse.next();
-  }
-
-  const isAuthenticated = !!req.auth;
-
-  if (pathname === "/") {
-    return NextResponse.redirect(
-      new URL(isAuthenticated ? "/dashboard" : "/login", nextUrl)
-    );
-  }
-
-  if (matchesPath(PUBLIC_PATHS, pathname)) {
-    return NextResponse.next();
-  }
-
-  if (matchesPath(GUEST_ONLY_PATHS, pathname)) {
-    if (isAuthenticated) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    if (pathname.startsWith("/api")) {
+      const limited = await enforceRateLimit(
+        `api:${getClientIp(req)}`,
+        API_RATE_LIMIT,
+        API_RATE_WINDOW_MS
+      );
+      return limited ?? NextResponse.next();
     }
+
+    const isAuthenticated = !!req.auth;
+
+    if (pathname === "/") {
+      return NextResponse.redirect(
+        new URL(isAuthenticated ? "/dashboard" : "/login", nextUrl)
+      );
+    }
+
+    if (matchesPath(PUBLIC_PATHS, pathname)) {
+      return NextResponse.next();
+    }
+
+    if (matchesPath(GUEST_ONLY_PATHS, pathname)) {
+      if (isAuthenticated) {
+        return NextResponse.redirect(new URL("/dashboard", nextUrl));
+      }
+      return NextResponse.next();
+    }
+
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL("/login", nextUrl));
+    }
+
+    return NextResponse.next();
+  } catch (err) {
+    console.error("Proxy failed — failing open:", err);
     return NextResponse.next();
   }
-
-  if (!isAuthenticated) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
-  }
-
-  return NextResponse.next();
 });
 
 export const config = {
