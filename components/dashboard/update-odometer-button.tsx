@@ -75,7 +75,10 @@ export function UpdateOdometerButton({
           <Button
             variant="default"
             size="sm"
-            className={cn("cursor-pointer border border-red-500 bg-transparent hover:bg-transparent", isOverdue && "border border-warning text-warning")}
+            className={cn(
+              "cursor-pointer border border-red-500 bg-transparent text-foreground hover:bg-transparent",
+              isOverdue && "border border-warning text-warning"
+            )}
           />
         }
       >
