@@ -749,8 +749,16 @@
       "image": "/cars/Toyota/Fortuner/Fortuner.jpg"
     },
     {
+      "name": "Glanza",
+      "image": null
+    },
+    {
       "name": "Hilux",
       "image": "/cars/Toyota/Hilux/Hilux.jpg"
+    },
+    {
+      "name": "Innova Crysta",
+      "image": null
     },
     {
       "name": "Innova Hycross",

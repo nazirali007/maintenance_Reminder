@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { InfoIcon } from "lucide-react";
 
 import { MAINTENANCE_CATALOG, type MaintenanceCatalogItem } from "@/lib/maintenance-catalog";
-import { getMaintenanceDueInfo } from "@/lib/maintenance";
+import { getMaintenanceDueInfo, DUE_SOON_KM_THRESHOLD } from "@/lib/maintenance";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,14 +32,10 @@ interface TrackedItem {
 export function AddMaintenanceItemDialog({
   vehicleId,
   currentMileage,
-  lastServiceMileage,
-  lastServiceDate,
   trackedItems,
 }: {
   vehicleId: string;
   currentMileage: number;
-  lastServiceMileage: number;
-  lastServiceDate: Date | null;
   trackedItems: TrackedItem[];
 }) {
   // Nudge the user until they've logged at least one item for this vehicle —
@@ -76,17 +72,33 @@ export function AddMaintenanceItemDialog({
     });
   }
 
-  // "Recommended" = the item's own service history (if it's already being
-  // tracked on this vehicle) or, failing that, the vehicle's own last-service
-  // baseline says it's due-soon or overdue at the current odometer reading.
+  // "Recommended" = the item's own service history, if it's already being
+  // tracked on this vehicle.
+  //
+  // For an item that ISN'T tracked yet, we have no real record of when it
+  // was last done — using the vehicle's blanket lastServiceMileage as a
+  // stand-in made every item look overdue at once past a certain mileage,
+  // since a single blanket "last serviced" point doesn't reflect each
+  // part's own (different) interval history. Instead, treat each item's
+  // own interval as a maintenance-schedule milestone (every 5,000 km:
+  // engine oil; every 40,000 km: coolant; etc.) and only recommend it when
+  // the current odometer reading is actually near one of ITS OWN
+  // milestones — matching what a real service checklist at this mileage
+  // would call for, not everything that's theoretically ever come due.
   function isRecommended(item: MaintenanceCatalogItem): boolean {
     const tracked = trackedItems.find((t) => t.name === item.label);
-    const baseline = tracked ?? {
-      intervalKm: item.defaultIntervalKm,
-      lastServiceMileage,
-      lastServiceDate,
-    };
-    return getMaintenanceDueInfo(baseline, currentMileage).status !== "ok";
+    if (tracked) {
+      return getMaintenanceDueInfo(tracked, currentMileage).status !== "ok";
+    }
+
+    if (currentMileage <= 0) return false;
+
+    const km = currentMileage % item.defaultIntervalKm;
+    const justPassedAMilestone =
+      currentMileage >= item.defaultIntervalKm && km <= DUE_SOON_KM_THRESHOLD;
+    const approachingAMilestone = item.defaultIntervalKm - km <= DUE_SOON_KM_THRESHOLD;
+
+    return justPassedAMilestone || approachingAMilestone;
   }
 
   async function onSubmit(e: SubmitEvent) {
