@@ -1,14 +1,44 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { enforceRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { getClientIp, rateLimitedResponse } from "@/lib/server/rate-limit";
 
 // Blanket backstop for every API route, on top of the tighter per-user/
 // per-email limits individual routes already enforce — this is what stops a
 // script hammering any endpoint (or one we haven't specifically throttled)
 // from taking the app down. Generous enough that normal usage never gets
 // near it.
+//
+// Kept in memory rather than Postgres: this runs on EVERY API request, and a
+// DB round trip here was adding 200ms+ of latency to every call (worst with
+// a cross-region database). Per warm server instance is plenty for a
+// backstop — a flood hits the same warm instance and still gets throttled —
+// while the abuse-sensitive routes (auth, writes) keep their durable
+// DB-backed per-user/per-email limits.
 const API_RATE_LIMIT = 60;
 const API_RATE_WINDOW_MS = 10 * 1000; // 10 seconds
+const BUCKET_SWEEP_THRESHOLD = 10_000;
+
+const apiHits = new Map<string, { count: number; windowStart: number }>();
+
+function isApiRateLimited(key: string): boolean {
+  const now = Date.now();
+
+  // Bound memory: drop expired buckets once the map gets large.
+  if (apiHits.size > BUCKET_SWEEP_THRESHOLD) {
+    for (const [k, v] of apiHits) {
+      if (now - v.windowStart > API_RATE_WINDOW_MS) apiHits.delete(k);
+    }
+  }
+
+  const bucket = apiHits.get(key);
+  if (!bucket || now - bucket.windowStart > API_RATE_WINDOW_MS) {
+    apiHits.set(key, { count: 1, windowStart: now });
+    return false;
+  }
+
+  bucket.count += 1;
+  return bucket.count > API_RATE_LIMIT;
+}
 
 // Pages that only make sense when logged out — an authenticated visitor
 // gets bounced to the dashboard instead of seeing them.
@@ -38,12 +68,10 @@ export default auth(async (req) => {
     const { pathname } = nextUrl;
 
     if (pathname.startsWith("/api")) {
-      const limited = await enforceRateLimit(
-        `api:${getClientIp(req)}`,
-        API_RATE_LIMIT,
-        API_RATE_WINDOW_MS
-      );
-      return limited ?? NextResponse.next();
+      if (isApiRateLimited(getClientIp(req))) {
+        return rateLimitedResponse();
+      }
+      return NextResponse.next();
     }
 
     const isAuthenticated = !!req.auth;

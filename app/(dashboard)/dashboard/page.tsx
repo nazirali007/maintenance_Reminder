@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
-import { getGreeting } from "@/lib/utils";
 import {
   computeHealthScore,
   getHealthScoreStatus,
@@ -23,6 +22,7 @@ import { UpdateOdometerButton } from "@/components/dashboard/update-odometer-but
 import { VehicleServiceAlert } from "@/components/dashboard/vehicle-service-alert";
 import { BrandMarquee } from "@/components/dashboard/brand-marquee";
 import { VehicleHero } from "@/components/dashboard/vehicle-hero";
+import { Greeting } from "@/components/dashboard/greeting";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -51,14 +51,13 @@ export default async function DashboardPage() {
   ]);
 
   const now = new Date();
-  const greeting = getGreeting();
   const firstName = user?.name?.trim().split(" ")[0];
 
   if (vehicles.length === 0) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
         <h1 className="text-xl font-semibold">
-          {greeting}
+          <Greeting />
           {firstName ? `, ${firstName}` : ""} 👋
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -75,7 +74,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-none flex-1 flex-col gap-6 p-6">
       <h1 className="animate-in fade-in slide-in-from-top-2 text-xl font-semibold duration-500">
-        {greeting}
+        <Greeting />
         {firstName ? `, ${firstName}` : ""} 👋
       </h1>
 
