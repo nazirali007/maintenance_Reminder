@@ -4,7 +4,11 @@ import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { InfoIcon } from "lucide-react";
 
-import { MAINTENANCE_CATALOG, type MaintenanceCatalogItem } from "@/lib/maintenance-catalog";
+import {
+  MAINTENANCE_CATALOG,
+  formatPriceRange,
+  type MaintenanceCatalogItem,
+} from "@/lib/maintenance-catalog";
 import { getMaintenanceDueInfo, DUE_SOON_KM_THRESHOLD } from "@/lib/maintenance";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,6 +55,12 @@ export function AddMaintenanceItemDialog({
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const selectedItems = MAINTENANCE_CATALOG.flatMap((section) => section.items).filter(
+    (item) => checkedKeys.has(item.key)
+  );
+  const estimatedMinInr = selectedItems.reduce((sum, item) => sum + item.priceMinInr, 0);
+  const estimatedMaxInr = selectedItems.reduce((sum, item) => sum + item.priceMaxInr, 0);
 
   function resetForm() {
     setOdometer(String(currentMileage));
@@ -110,9 +120,10 @@ export function AddMaintenanceItemDialog({
       return;
     }
 
-    const items = MAINTENANCE_CATALOG.flatMap((section) => section.items)
-      .filter((item) => checkedKeys.has(item.key))
-      .map((item) => ({ name: item.label, intervalKm: item.defaultIntervalKm }));
+    const items = selectedItems.map((item) => ({
+      name: item.label,
+      intervalKm: item.defaultIntervalKm,
+    }));
 
     setIsSubmitting(true);
     const res = await fetch(`/api/vehicles/${vehicleId}/maintenance-items`, {
@@ -190,10 +201,16 @@ export function AddMaintenanceItemDialog({
           </div>
 
           <div className="flex flex-col gap-4">
-            <p className="text-sm font-medium">
-              What was serviced?{" "}
-              <span className="text-muted-foreground">(select all that apply)</span>
-            </p>
+            <div>
+              <p className="text-sm font-medium">
+                What was serviced?{" "}
+                <span className="text-muted-foreground">(select all that apply)</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Prices are rough estimates for a mass-market car — actual cost
+                varies by model, city, and workshop.
+              </p>
+            </div>
 
             <div className="flex max-h-72 flex-col gap-5 overflow-y-auto pr-1">
               {MAINTENANCE_CATALOG.map((section) => (
@@ -207,19 +224,22 @@ export function AddMaintenanceItemDialog({
                         key={item.key}
                         className="flex items-start justify-between gap-2 rounded-lg border border-border p-2.5 transition-colors has-data-checked:border-primary/40 has-data-checked:bg-primary/5"
                       >
-                        <label className="flex flex-1 items-start gap-2.5">
+                        <label className="flex min-w-0 flex-1 items-start gap-2.5">
                           <Checkbox
                             className="mt-0.5"
                             checked={checkedKeys.has(item.key)}
                             onCheckedChange={() => toggleItem(item.key)}
                           />
-                          <span className="text-sm font-medium">
+                          <span className="min-w-0 text-sm font-medium">
                             {item.label}
                             {isRecommended(item) && (
                               <span className="ml-1.5 text-xs font-normal text-warning">
                                 (Recommended)
                               </span>
                             )}
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {formatPriceRange(item.priceMinInr, item.priceMaxInr)}
+                            </span>
                           </span>
                         </label>
 
@@ -243,6 +263,21 @@ export function AddMaintenanceItemDialog({
                 </div>
               ))}
             </div>
+
+            {selectedItems.length > 0 && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/5 p-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Estimated service cost</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedItems.length}{" "}
+                    {selectedItems.length === 1 ? "item" : "items"} selected
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-semibold whitespace-nowrap">
+                  {formatPriceRange(estimatedMinInr, estimatedMaxInr)}
+                </p>
+              </div>
+            )}
           </div>
 
           <Field>
