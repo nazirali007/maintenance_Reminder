@@ -1,9 +1,12 @@
+import { after } from "next/server";
+
 import { prisma } from "@/lib/server/prisma";
 import { requireUserId, unauthorizedResponse } from "@/lib/server/auth-guard";
 import { vehicleSchema } from "@/lib/validations/vehicle";
 import { shouldLogOdometerReading } from "@/lib/odometer-projection";
 import { enforceRateLimit } from "@/lib/server/rate-limit";
 import { withApiErrorHandling } from "@/lib/server/api-error";
+import { checkAndNotifyDueMaintenance } from "@/lib/server/notifications";
 
 const WRITE_RATE_LIMIT = 20;
 const WRITE_RATE_WINDOW_MS = 60 * 1000; // 1 minute
@@ -97,21 +100,36 @@ export async function PATCH(
       );
     }
 
-    const { lastServiceDate, ...rest } = parsed.data;
+    const { lastServiceDate, markItemsServiced, ...rest } = parsed.data;
+    const serviceDate = lastServiceDate ? new Date(lastServiceDate) : null;
 
     const vehicle = await prisma.vehicle.update({
       where: { id: vehicleId },
-      data: {
-        ...rest,
-        lastServiceDate: lastServiceDate ? new Date(lastServiceDate) : null,
-      },
+      data: { ...rest, lastServiceDate: serviceDate },
     });
+
+    // The user confirmed the whole car was serviced at this reading, so bring
+    // each tracked item's own history up to the same point — otherwise they'd
+    // keep reporting overdue against their stale individual readings.
+    if (markItemsServiced) {
+      await prisma.maintenanceItem.updateMany({
+        where: { vehicleId },
+        data: {
+          lastServiceMileage: vehicle.lastServiceMileage,
+          lastServiceDate: serviceDate ?? new Date(),
+        },
+      });
+    }
 
     if (shouldLogOdometerReading(existing.currentMileage, vehicle.currentMileage)) {
       await prisma.odometerLog.create({
         data: { vehicleId: vehicle.id, reading: vehicle.currentMileage },
       });
     }
+
+    // Reflect the new readings in the bell straight away — this is what
+    // clears reminders the user just resolved by logging the service.
+    after(() => checkAndNotifyDueMaintenance(userId, [vehicleId]));
 
     return Response.json({ vehicle });
   });

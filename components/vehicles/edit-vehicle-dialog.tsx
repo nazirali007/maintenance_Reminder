@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PencilIcon } from "lucide-react";
+import { PencilIcon, WrenchIcon } from "lucide-react";
 
 import { vehicleSchema, type VehicleInput } from "@/lib/validations/vehicle";
 import type { Vehicle } from "@/lib/generated/prisma/client";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +29,17 @@ function toDateInputValue(date: Date | null): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function EditVehicleDialog({ vehicle }: { vehicle: Vehicle }) {
+export function EditVehicleDialog({
+  vehicle,
+  triggerClassName,
+  maintenanceItemCount,
+}: {
+  vehicle: Vehicle;
+  /** Lets callers restyle the trigger — e.g. for the dashboard's dark hero image. */
+  triggerClassName?: string;
+  /** Drives the "also mark tracked items as serviced" option; omit where the count isn't loaded. */
+  maintenanceItemCount?: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -54,13 +66,25 @@ export function EditVehicleDialog({ vehicle }: { vehicle: Vehicle }) {
     defaultValues,
   });
 
+  // Raising the last-service reading means "I just had this car serviced" —
+  // worth confirming, since it resets the car's service reminders.
+  const watchedLastService = Number(useWatch({ control, name: "lastServiceMileage" }));
+  const isNewService =
+    Number.isFinite(watchedLastService) &&
+    watchedLastService > vehicle.lastServiceMileage;
+  const [markItemsServiced, setMarkItemsServiced] = useState(false);
+  const trackedItemCount = maintenanceItemCount ?? 0;
+
   const onSubmit = async (data: VehicleInput) => {
     setFormError(null);
 
     const res = await fetch(`/api/vehicles/${vehicle.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        ...data,
+        markItemsServiced: isNewService && markItemsServiced,
+      }),
     });
 
     if (!res.ok) {
@@ -96,7 +120,12 @@ export function EditVehicleDialog({ vehicle }: { vehicle: Vehicle }) {
     >
       <DialogTrigger
         render={
-          <Button variant="outline" size="icon-sm" aria-label="Edit vehicle" />
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Edit vehicle"
+            className={cn("cursor-pointer", triggerClassName)}
+          />
         }
       >
         <PencilIcon />
@@ -113,9 +142,40 @@ export function EditVehicleDialog({ vehicle }: { vehicle: Vehicle }) {
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <VehicleFormFields control={control} register={register} errors={errors} />
 
+          {isNewService && (
+            <div className="mt-4 flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3">
+              <div className="flex items-start gap-2">
+                <WrenchIcon className="mt-0.5 size-4 shrink-0 text-warning" />
+                <p className="text-sm">
+                  Marking this car as serviced at{" "}
+                  <strong>{watchedLastService.toLocaleString("en-US")} km</strong>.
+                  Saving will clear its service reminders.
+                </p>
+              </div>
+
+              {trackedItemCount > 0 && (
+                <label className="flex items-start gap-2.5 pl-6">
+                  <Checkbox
+                    className="mt-0.5"
+                    checked={markItemsServiced}
+                    onCheckedChange={(checked) => setMarkItemsServiced(checked === true)}
+                  />
+                  <span className="text-sm">
+                    Also mark {trackedItemCount} tracked{" "}
+                    {trackedItemCount === 1 ? "item" : "items"} as serviced
+                    <span className="block text-xs text-muted-foreground">
+                      Tick this if the full service covered them — otherwise they
+                      stay on their own schedules and may still show as due.
+                    </span>
+                  </span>
+                </label>
+              )}
+            </div>
+          )}
+
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save changes"}
+              {isSubmitting ? "Saving..." : isNewService ? "Confirm & save" : "Save changes"}
             </Button>
           </DialogFooter>
         </form>

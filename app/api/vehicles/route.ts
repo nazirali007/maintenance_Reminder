@@ -43,11 +43,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const { lastServiceDate, ...rest } = parsed.data;
+    // Listed explicitly rather than spread, so form-only fields (e.g.
+    // markItemsServiced, which only applies when editing) can't leak into
+    // Prisma's create input and blow up as an unknown column.
+    const {
+      brand,
+      model,
+      fuelType,
+      transmission,
+      currentMileage,
+      lastServiceMileage,
+      lastServiceDate,
+    } = parsed.data;
 
     const vehicle = await prisma.vehicle.create({
       data: {
-        ...rest,
+        brand,
+        model,
+        fuelType,
+        transmission,
+        currentMileage,
+        lastServiceMileage,
         year: new Date().getFullYear(),
         lastServiceDate: lastServiceDate ? new Date(lastServiceDate) : null,
         userId,

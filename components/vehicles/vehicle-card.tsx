@@ -6,7 +6,11 @@ import { DeleteVehicleDialog } from "@/components/vehicles/delete-vehicle-dialog
 import { FUEL_LABELS } from "@/lib/vehicle-labels";
 import type { Vehicle } from "@/lib/generated/prisma/client";
 
-export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+export function VehicleCard({
+  vehicle,
+}: {
+  vehicle: Vehicle & { _count?: { maintenanceItems: number } };
+}) {
   const addedDate = new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "long",
@@ -21,7 +25,10 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           {vehicle.brand} {vehicle.model}
         </CardTitle>
         <div className="flex shrink-0 items-center gap-1.5">
-          <EditVehicleDialog vehicle={vehicle} />
+          <EditVehicleDialog
+            vehicle={vehicle}
+            maintenanceItemCount={vehicle._count?.maintenanceItems}
+          />
           <DeleteVehicleDialog vehicle={vehicle} />
         </div>
       </CardHeader>

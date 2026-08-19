@@ -14,6 +14,67 @@ interface Candidate {
   dedupKey: string;
 }
 
+type DueItemEntry = { item: { id: string }; dueInfo: { status: string } };
+type DueVehicleEntry = { vehicle: { id: string }; dueInfo: { status: string } };
+
+function statusToType(status: string): NotificationType {
+  return status === "overdue" ? "OVERDUE" : "DUE_SOON";
+}
+
+/**
+ * Marks unread OVERDUE/DUE_SOON reminders as read once they no longer apply —
+ * the user serviced the car, logged the item, or corrected the odometer.
+ *
+ * Without this, a reminder created while something was overdue stays in the
+ * bell forever, even after it's been dealt with. The notification copy itself
+ * tells users that updating their service details will "clear this reminder",
+ * so not clearing it is a broken promise. Also covers the overdue→due-soon
+ * transition: the stale OVERDUE row resolves and a fresh DUE_SOON is created.
+ */
+async function resolveStaleNotifications(
+  userId: string,
+  vehicles: { id: string }[],
+  dueItems: DueItemEntry[],
+  dueVehicles: DueVehicleEntry[]
+) {
+  const stillDue = new Set([
+    ...dueItems.map((d) => `item:${d.item.id}:${statusToType(d.dueInfo.status)}`),
+    ...dueVehicles.map((d) => `vehicle:${d.vehicle.id}:${statusToType(d.dueInfo.status)}`),
+  ]);
+
+  const openReminders = await prisma.notification.findMany({
+    where: {
+      userId,
+      status: "UNREAD",
+      type: { in: ["OVERDUE", "DUE_SOON", "ESTIMATED_OVERDUE"] },
+      vehicleId: { in: vehicles.map((v) => v.id) },
+    },
+    select: { id: true, vehicleId: true, maintenanceItemId: true, type: true },
+  });
+
+  const resolvedIds = openReminders
+    .filter((n) => {
+      // ESTIMATED_OVERDUE comes from the cron's projected mileage; the real
+      // reading we're checking against here supersedes it, so it resolves
+      // whenever the thing it warned about is no longer due at all.
+      const key = n.maintenanceItemId
+        ? `item:${n.maintenanceItemId}:`
+        : `vehicle:${n.vehicleId}:`;
+      if (n.type === "ESTIMATED_OVERDUE") {
+        return !stillDue.has(`${key}OVERDUE`) && !stillDue.has(`${key}DUE_SOON`);
+      }
+      return !stillDue.has(`${key}${n.type}`);
+    })
+    .map((n) => n.id);
+
+  if (resolvedIds.length === 0) return;
+
+  await prisma.notification.updateMany({
+    where: { id: { in: resolvedIds } },
+    data: { status: "READ" },
+  });
+}
+
 /**
  * Checks a user's vehicles against their REAL current mileage/last-service
  * data (as opposed to the daily cron's estimated-from-driving-rate check)
@@ -55,6 +116,8 @@ export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: 
   const dueVehicles = vehicles
     .map((vehicle) => ({ vehicle, dueInfo: getVehicleServiceDueInfo(vehicle, { now }) }))
     .filter(({ dueInfo }) => dueInfo.status !== "ok");
+
+  await resolveStaleNotifications(userId, vehicles, dueItems, dueVehicles);
 
   const candidates: Candidate[] = [];
 

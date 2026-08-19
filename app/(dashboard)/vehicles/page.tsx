@@ -20,6 +20,9 @@ export default async function VehiclesPage() {
   const vehicles = await prisma.vehicle.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
+    // Counted (not fetched) so the edit dialog can offer to mark tracked
+    // items as serviced alongside the vehicle's own last-service reading.
+    include: { _count: { select: { maintenanceItems: true } } },
   });
 
   return (

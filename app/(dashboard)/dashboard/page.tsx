@@ -107,6 +107,7 @@ export default async function DashboardPage() {
                 vehicle={vehicle}
                 healthScore={healthScore}
                 healthStatus={healthStatus}
+                maintenanceItemCount={vehicle.maintenanceItems.length}
               />
               <CardContent className="flex flex-col gap-4">
                 <VehicleServiceAlert dueInfo={serviceDueInfo} />

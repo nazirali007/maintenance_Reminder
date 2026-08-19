@@ -67,7 +67,11 @@ export function VehicleFormFields({
           name="fuelType"
           control={control}
           render={({ field }) => (
-            <Select value={field.value ?? null} onValueChange={field.onChange}>
+            <Select
+              items={FUEL_OPTIONS}
+              value={field.value ?? null}
+              onValueChange={field.onChange}
+            >
               <SelectTrigger id="fuelType" className="w-full">
                 <SelectValue placeholder="Select fuel type" />
               </SelectTrigger>
@@ -90,7 +94,11 @@ export function VehicleFormFields({
           name="transmission"
           control={control}
           render={({ field }) => (
-            <Select value={field.value ?? null} onValueChange={field.onChange}>
+            <Select
+              items={TRANSMISSION_OPTIONS}
+              value={field.value ?? null}
+              onValueChange={field.onChange}
+            >
               <SelectTrigger id="transmission" className="w-full">
                 <SelectValue placeholder="Select transmission" />
               </SelectTrigger>
