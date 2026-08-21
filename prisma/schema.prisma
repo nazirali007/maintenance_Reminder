@@ -182,7 +182,10 @@ model Notification {
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicle         Vehicle?         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  maintenanceItem MaintenanceItem? @relation(fields: [maintenanceItemId], references: [id], onDelete: SetNull)
+  // Cascade, not SetNull: a nulled maintenanceItemId makes an item-level row
+  // collide with the vehicle-level partial unique index below, and a reminder
+  // about an item that no longer exists is meaningless anyway.
+  maintenanceItem MaintenanceItem? @relation(fields: [maintenanceItemId], references: [id], onDelete: Cascade)
 
   // Matches `getUnreadNotifications`'s where clause exactly.
   @@index([userId, status])
