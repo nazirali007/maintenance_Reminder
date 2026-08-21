@@ -8,11 +8,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export interface NotificationItem {
   id: string;
@@ -73,18 +78,30 @@ export function NotificationMenuItems({
           No new notifications
         </div>
       ) : (
-        notifications.map((notification) => (
-          <DropdownMenuItem
-            key={notification.id}
-            className="flex flex-col items-start gap-0.5"
-            onClick={() => markAsRead(notification.id)}
-          >
-            <span className="text-sm font-medium">{notification.title}</span>
-            <span className="text-xs text-muted-foreground">
-              {notification.message}
-            </span>
-          </DropdownMenuItem>
-        ))
+        <Accordion className="px-1.5">
+          {notifications.map((notification) => (
+            <AccordionItem key={notification.id} value={notification.id}>
+              <AccordionTrigger className="text-left hover:no-underline">
+                {notification.title}
+              </AccordionTrigger>
+              <AccordionContent className="flex flex-col items-start gap-2 pb-3">
+                <p className="text-xs text-muted-foreground">
+                  {notification.message}
+                </p>
+                {/* Dismissing is its own action now — the row itself expands
+                    rather than marking read, so a stray click can't silently
+                    clear a reminder the user hasn't read yet. */}
+                <button
+                  type="button"
+                  onClick={() => markAsRead(notification.id)}
+                  className="cursor-pointer text-xs font-medium text-primary underline underline-offset-4"
+                >
+                  Mark as read
+                </button>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       )}
     </>
   );
