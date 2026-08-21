@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/server/prisma";
+import { checkAndNotifyDueMaintenance } from "@/lib/server/notifications";
 import {
   computeHealthScore,
   getHealthScoreStatus,
@@ -49,6 +51,11 @@ export default async function DashboardPage() {
       },
     }),
   ]);
+
+  // Runs after the response is sent, so it never adds latency to this render.
+  // Anything newly due shows up on the next visit; mutations that change
+  // due-status trigger this directly, so it's a safety net for time passing.
+  after(() => checkAndNotifyDueMaintenance(session.user!.id!));
 
   const now = new Date();
   const firstName = user?.name?.trim().split(" ")[0];

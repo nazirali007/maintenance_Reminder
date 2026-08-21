@@ -1,7 +1,5 @@
-import { after } from "next/server";
-
 import { auth } from "@/auth";
-import { checkAndNotifyDueMaintenance, getUnreadNotifications } from "@/lib/server/notifications";
+import { getUnreadNotifications } from "@/lib/server/notifications";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -14,15 +12,14 @@ export default async function DashboardGroupLayout({
 }) {
   const session = await auth();
 
-  let notifications: { id: string; title: string; message: string }[] = [];
-  if (session?.user?.id) {
-    const userId = session.user.id;
-    // Read existing notifications for this render; sync (which only ever
-    // writes) runs after the response is sent so it never adds latency to
-    // the page load. Any newly-overdue item shows up on the next visit.
-    notifications = await getUnreadNotifications(userId);
-    after(() => checkAndNotifyDueMaintenance(userId));
-  }
+  // Only reads here. The due-status sync used to run from this layout, which
+  // meant every navigation in the group — including /settings, which shows no
+  // vehicle data at all — spent ~5 extra queries recomputing reminders. It now
+  // runs on the dashboard (where that status is actually surfaced) and is
+  // triggered directly by the mutations that can change it.
+  const notifications = session?.user?.id
+    ? await getUnreadNotifications(session.user.id)
+    : [];
 
   return (
     <div className="flex flex-1 md:h-dvh">

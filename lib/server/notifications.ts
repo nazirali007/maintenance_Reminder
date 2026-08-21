@@ -236,9 +236,17 @@ export async function checkAndNotifyDueMaintenance(userId: string, vehicleIds?: 
   }
 }
 
+/** The bell caps its badge at "9+", so there's nothing to gain from fetching more. */
+const UNREAD_NOTIFICATION_LIMIT = 20;
+
 export function getUnreadNotifications(userId: string) {
   return prisma.notification.findMany({
     where: { userId, status: "UNREAD" },
     orderBy: { createdAt: "desc" },
+    // Runs on every page load in the dashboard group, so it selects only the
+    // three fields the bell renders and caps the row count — unbounded, it
+    // would grow with the user's backlog and ship dead columns over the wire.
+    select: { id: true, title: true, message: true },
+    take: UNREAD_NOTIFICATION_LIMIT,
   });
 }

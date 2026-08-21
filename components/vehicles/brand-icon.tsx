@@ -16,7 +16,7 @@ export function BrandIcon({
   brand: string;
   size?: number;
   className?: string;
-  /** Skip lazy-loading and the image-optimization round trip — for icons that must render instantly (e.g. the brand marquee), not for off-screen/lazy contexts. */
+  /** Load immediately instead of lazily — for icons visible on first paint (e.g. the brand marquee). */
   eager?: boolean;
 }) {
   const [logoFailed, setLogoFailed] = useState(false);
@@ -30,8 +30,11 @@ export function BrandIcon({
         alt={brand}
         width={size}
         height={size}
+        // Eager only affects *when* the fetch starts. Optimization stays on:
+        // these source PNGs run up to 613KB, and serving the original to fill
+        // a 48px box downloaded ~3.5MB across the marquee. Resized, each is a
+        // few KB — so eager here is both instant and cheap.
         loading={eager ? "eager" : "lazy"}
-        unoptimized={eager}
         className={cn("shrink-0 rounded-sm p-1 object-contain bg-white", className)}
         style={{ width: size, height: size }}
         onError={() => setLogoFailed(true)}
